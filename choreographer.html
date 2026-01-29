@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Choreo Layer Planner</title>
+    <style>
+        body { background: #1a1a1a; color: #eee; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; }
+        #toolbar { width: 100%; background: #333; padding: 10px; display: flex; gap: 20px; border-bottom: 2px solid #444; justify-content: center; font-size: 13px; }
+        #views-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; margin-left: 200px; margin-right: 320px; justify-content: center; }
+        .view-panel { background: #000; border: 1px solid #555; cursor: crosshair; position: relative; }
+        .view-panel canvas { display: block; }
+        .view-label { position: absolute; top: 5px; left: 5px; font-size: 11px; color: #666; pointer-events: none; }
+        #ui-panel { width: 300px; padding: 20px; background: #222; height: 100vh; position: fixed; right: 0; top: 0; border-left: 1px solid #444; overflow-y: auto; }
+        #formations-panel { width: 180px; padding: 15px; background: #222; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #444; overflow-y: auto; }
+        #formations-panel h4 { margin: 0 0 10px 0; font-size: 13px; color: #aaa; }
+        .formation-btn { width: 100%; margin-bottom: 5px; text-align: left; font-size: 11px; padding: 8px 10px; }
+        .formation-section { margin-bottom: 15px; }
+        .formation-params { font-size: 11px; margin-bottom: 10px; }
+        .formation-params label { display: block; margin: 5px 0; }
+        .formation-params input { width: 50px; }
+        .dancer-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; margin-right: 5px; }
+        textarea { width: 100%; height: 80px; background: #111; color: #0f0; border: 1px solid #444; font-family: monospace; font-size: 11px; }
+        .layer-ctrl { margin-top: 20px; display: flex; align-items: center; gap: 10px; }
+        button { cursor: pointer; padding: 5px 12px; background: #444; color: white; border: 1px solid #666; }
+        button:hover { background: #555; }
+        .active-dancer { outline: 3px solid white; outline-offset: 2px; }
+        .group-select { width: 35px; font-size: 10px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; }
+        .group-row { display: flex; align-items: center; gap: 5px; margin: 3px 0; }
+        .group-color { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div id="toolbar">
+    <div>
+        Size: <input type="number" id="stageW" value="15" style="width: 40px;"> x
+        <input type="number" id="stageD" value="10" style="width: 40px;"> x
+        <input type="number" id="stageH" value="3" style="width: 40px;"> (m) W x D x H
+        <button onclick="applyStageSize()">Apply</button>
+    </div>
+</div>
+
+<div id="formations-panel">
+    <h4>Formations</h4>
+
+    <div class="formation-params">
+        <label>Spread: <input type="number" id="formSpread" value="1.5" step="0.25" min="0.5"> m</label>
+        <label>Radius: <input type="number" id="formRadius" value="3" step="0.5" min="1"> m</label>
+        <label>Position: <input type="number" id="formPosition" value="50" step="10" min="0" max="100">% <span style="color:#666">(0=front)</span></label>
+    </div>
+
+    <div class="formation-section">
+        <button class="formation-btn" onclick="applyFormation('hline')">― Horizontal Line</button>
+        <button class="formation-btn" onclick="applyFormation('vline')">| Vertical Line</button>
+        <button class="formation-btn" onclick="applyFormation('diagonal')">⟋ Diagonal</button>
+        <button class="formation-btn" onclick="applyFormation('diagonalBack')">⟍ Diagonal Back</button>
+    </div>
+
+    <div class="formation-section">
+        <button class="formation-btn" onclick="applyFormation('circle')">○ Circle</button>
+        <button class="formation-btn" onclick="applyFormation('semicircle')">◠ Semi-circle</button>
+        <button class="formation-btn" onclick="applyFormation('arc')">⌒ Arc (front)</button>
+    </div>
+
+    <div class="formation-section">
+        <button class="formation-btn" onclick="applyFormation('vshape')">∨ V-Shape</button>
+        <button class="formation-btn" onclick="applyFormation('invertedV')">∧ Inverted V</button>
+        <button class="formation-btn" onclick="applyFormation('arrow')">▷ Arrow</button>
+    </div>
+
+    <div class="formation-section">
+        <button class="formation-btn" onclick="applyFormation('grid')">⊞ Grid</button>
+        <button class="formation-btn" onclick="applyFormation('staggered')">⋮⋮ Staggered</button>
+        <button class="formation-btn" onclick="applyFormation('triangle')">△ Triangle</button>
+    </div>
+
+    <div class="formation-section">
+        <button class="formation-btn" onclick="applyFormation('random')">✦ Scatter</button>
+        <button class="formation-btn" onclick="applyFormation('cluster')">● Cluster</button>
+    </div>
+
+    <p style="font-size: 10px; color: #666; margin-top: 10px;">Applies to all dancers on current layer.</p>
+</div>
+
+<div id="views-container">
+    <div class="view-panel">
+        <canvas id="topCanvas"></canvas>
+        <span class="view-label">TOP (X-Y)</span>
+    </div>
+    <div class="view-panel">
+        <canvas id="frontCanvas"></canvas>
+        <span class="view-label">FRONT (X-Z)</span>
+    </div>
+    <div class="view-panel">
+        <canvas id="sideCanvas"></canvas>
+        <span class="view-label">SIDE (Y-Z)</span>
+    </div>
+</div>
+
+<img src="ChoreoToolLogo.png" alt="Ruby's Online Choreography Helper" style="position: fixed; left: 10px; bottom: 10px;">
+
+<div id="ui-panel">
+    <h3>Dancers</h3>
+    <div style="margin-bottom: 10px;">
+        Count: <input type="number" id="dancerCount" value="6" min="1" max="12" style="width: 40px;" onchange="updateDancerCount()">
+    </div>
+    <div id="dancer-list"></div>
+
+    <h4>Overlays</h4>
+    <div style="font-size: 12px;">
+        <label><input type="checkbox" id="showMargin" checked onchange="toggleMargin()"> Show Margin</label>
+        <span style="margin-left: 10px;">Size: <input type="number" id="marginSize" value="1.0" min="0" step="0.5" style="width: 50px;" onchange="updateMargin()"> m</span>
+    </div>
+    <div style="font-size: 12px; margin-top: 5px;">
+        <label><input type="checkbox" id="showPaths" onchange="render()"> Show Movement Paths</label>
+    </div>
+    <div style="font-size: 12px; margin-top: 8px;">
+        <label>Stage Shape:
+            <select id="stageShape" onchange="render()" style="font-size: 11px;">
+                <option value="rectangle">Rectangle</option>
+                <option value="semicircle">Half Circle</option>
+                <option value="halfoval">Half Oval</option>
+                <option value="thrust">Rect + Half Circle</option>
+                <option value="trapezoid">Trapezoid</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="layer-ctrl">
+        <button onclick="changeLayer(-1)">PREV Layer</button>
+        <span id="layerDisplay">Layer: 1</span>
+        <button onclick="changeLayer(1)">NEXT Layer</button>
+    </div>
+    <p style="font-size: 11px; color: #888;">Click on stage to place/move dancer for current layer.</p>
+
+    <h4>Timing Groups</h4>
+    <div style="font-size: 12px; margin-bottom: 10px;">
+        <label>Groups: <input type="number" id="numGroups" value="1" min="1" max="12" style="width: 40px;" onchange="updateTimingGroups()"></label>
+        <span style="margin-left: 10px; color: #888;" id="groupModeLabel">(All sync)</span>
+    </div>
+    <div id="group-assignments" style="font-size: 11px; margin-bottom: 10px;"></div>
+
+    <h4>Group Timing <span id="currentGroupLabel" style="color: #888; font-weight: normal;">(Group 1)</span></h4>
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 12px;">
+        <label>Travel Time (s):</label>
+        <input type="number" id="travelTime" value="3.0" step="0.1" min="0" style="width: 70px;" oninput="updateGroupTiming()">
+        <label>Sleep (s):</label>
+        <input type="number" id="sleepTime" value="10" step="0.1" min="0" style="width: 70px;" oninput="updateGroupTiming()">
+    </div>
+    <p style="font-size: 10px; color: #666; margin-top: 5px;">Timing applies to all dancers in the same group.</p>
+
+    <h4>Export (SpotOn Format)</h4>
+    <div style="display: flex; gap: 5px; align-items: center;">
+        <select id="exportDancer"></select>
+        <button onclick="generateNotecard()" style="flex: 1;">Single</button>
+        <button onclick="generateAllNotecards()" style="flex: 1;">All Dancers</button>
+    </div>
+    <textarea id="output" readonly></textarea>
+
+    <h4>Live Control</h4>
+    <div style="font-size: 12px;">
+        <input type="text" id="slUrl" placeholder="Paste controller URL from SL..." style="width: 100%; margin-bottom: 5px; background: #111; color: #0f0; border: 1px solid #444; font-size: 11px; padding: 4px; box-sizing: border-box;">
+        <div style="display: flex; gap: 5px;">
+            <button onclick="sendToSL()" style="flex: 2; background: #254025;">Send Data</button>
+            <button onclick="sendCommand('PLAY')" style="flex: 1; background: #253040;">Play</button>
+        </div>
+        <div style="display: flex; gap: 5px; margin-top: 3px;">
+            <button onclick="sendCommand('STOP')" style="flex: 1;">Stop</button>
+            <button onclick="sendCommand('RESET')" style="flex: 1;">Reset</button>
+        </div>
+        <div id="slStatus" style="color: #888; margin-top: 5px; font-size: 11px;">Not connected</div>
+    </div>
+
+    <h4>Project</h4>
+    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+        <button onclick="exportProject()" style="flex: 1;">Export JSON</button>
+        <button onclick="document.getElementById('importFile').click()" style="flex: 1;">Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importProject(event)">
+    </div>
+    <button onclick="newProject()" style="width: 100%; margin-top: 8px; background: #633;">New Project</button>
+    <div style="margin-top: 8px; font-size: 11px; color: #888;">
+        <span id="autoSaveStatus">Auto-saving enabled</span>
+    </div>
+</div>
+
+<script>
+    // Canvases
+    const topCanvas = document.getElementById('topCanvas');
+    const frontCanvas = document.getElementById('frontCanvas');
+    const sideCanvas = document.getElementById('sideCanvas');
+    const topCtx = topCanvas.getContext('2d');
+    const frontCtx = frontCanvas.getContext('2d');
+    const sideCtx = sideCanvas.getContext('2d');
+
+    const dancerColors = ["#00FF00", "#8B00FF", "#0000FF", "#FFFF00", "#FFA500", "#FF0000", "#00FFFF", "#FF69B4", "#98FB98", "#DDA0DD", "#87CEEB", "#F0E68C"];
+    const dancerNames = ["Green", "Violet", "Blue", "Yellow", "Orange", "Red", "Cyan", "Pink", "Mint", "Plum", "Sky", "Khaki"];
+
+    // State
+    let stageCenter = { x: 0, y: 0, z: 0 };
+    let currentLayer = 0;
+    let selectedDancer = 0;
+    let ppm = 40; // Pixels per meter
+    let dancerCount = 6;
+    let showMargin = true;
+    let marginSize = 1.0; // meters
+    let stageHeight = 3; // meters (Z axis range)
+    let numGroups = 1;
+    let dancerGroups = [1,1,1,1,1,1,1,1,1,1,1,1]; // Group assignment for each dancer (1-indexed)
+
+    // Data structure: layers[layerIndex][dancerIndex] = {x, y, z, travel, sleep, rot} or null if not placed
+    let layers = [ Array(12).fill(null) ];
+
+    function init() {
+        // Try to load saved project from localStorage
+        const loaded = loadFromStorage();
+
+        updateCanvasSize();
+        buildDancerUI();
+        buildGroupAssignmentsUI();
+        updateTimingUI();
+
+        if (loaded) {
+            // Update group mode label
+            const label = document.getElementById('groupModeLabel');
+            if (numGroups === 1) {
+                label.textContent = '(All sync)';
+            } else if (numGroups === dancerCount) {
+                label.textContent = '(Individual)';
+            } else {
+                label.textContent = `(${numGroups} groups)`;
+            }
+        }
+
+        render();
+    }
+
+    function updateCanvasSize() {
+        const w = parseFloat(document.getElementById('stageW').value) || 15;
+        const d = parseFloat(document.getElementById('stageD').value) || 10;
+        const h = parseFloat(document.getElementById('stageH').value) || 3;
+        stageHeight = h;
+
+        // Top view: X (width) x Y (depth)
+        topCanvas.width = w * ppm;
+        topCanvas.height = d * ppm;
+
+        // Front view: X (width) x Z (height)
+        frontCanvas.width = w * ppm;
+        frontCanvas.height = h * ppm;
+
+        // Side view: Y (depth) x Z (height)
+        sideCanvas.width = d * ppm;
+        sideCanvas.height = h * ppm;
+    }
+
+    function applyStageSize() {
+        updateCanvasSize();
+        render();
+    }
+
+    function buildDancerUI() {
+        const container = document.getElementById('dancer-list');
+        container.innerHTML = '';
+        dancerColors.slice(0, dancerCount).forEach((color, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'dancer-btn' + (i === selectedDancer ? ' active-dancer' : '');
+            btn.style.backgroundColor = color;
+            btn.onclick = () => {
+                document.querySelectorAll('.dancer-btn').forEach(b => b.classList.remove('active-dancer'));
+                btn.classList.add('active-dancer');
+                selectedDancer = i;
+                updateTimingUI();
+            };
+            container.appendChild(btn);
+        });
+        // Update export dropdown
+        const exportSelect = document.getElementById('exportDancer');
+        exportSelect.innerHTML = '';
+        for (let i = 0; i < dancerCount; i++) {
+            const opt = document.createElement('option');
+            opt.value = i + 1;
+            opt.textContent = `Dancer ${i + 1} (${dancerNames[i]})`;
+            exportSelect.appendChild(opt);
+        }
+    }
+
+    function updateDancerCount() {
+        dancerCount = parseInt(document.getElementById('dancerCount').value) || 6;
+        if (dancerCount < 1) dancerCount = 1;
+        if (dancerCount > 12) dancerCount = 12;
+        if (selectedDancer >= dancerCount) selectedDancer = 0;
+        // Adjust groups if needed
+        if (numGroups > dancerCount) {
+            numGroups = dancerCount;
+            document.getElementById('numGroups').value = numGroups;
+        }
+        buildDancerUI();
+        buildGroupAssignmentsUI();
+        render();
+    }
+
+    function updateTimingGroups() {
+        numGroups = parseInt(document.getElementById('numGroups').value) || 1;
+        if (numGroups < 1) numGroups = 1;
+        if (numGroups > dancerCount) numGroups = dancerCount;
+        document.getElementById('numGroups').value = numGroups;
+
+        // Update label
+        const label = document.getElementById('groupModeLabel');
+        if (numGroups === 1) {
+            label.textContent = '(All sync)';
+        } else if (numGroups === dancerCount) {
+            label.textContent = '(Individual)';
+        } else {
+            label.textContent = `(${numGroups} groups)`;
+        }
+
+        // Auto-distribute dancers to groups
+        for (let i = 0; i < dancerCount; i++) {
+            dancerGroups[i] = (i % numGroups) + 1;
+        }
+
+        buildGroupAssignmentsUI();
+        updateTimingUI();
+    }
+
+    function buildGroupAssignmentsUI() {
+        const container = document.getElementById('group-assignments');
+        if (numGroups === 1) {
+            container.innerHTML = '<span style="color: #666;">All dancers synced together</span>';
+            return;
+        }
+
+        container.innerHTML = '';
+        for (let i = 0; i < dancerCount; i++) {
+            const row = document.createElement('div');
+            row.className = 'group-row';
+
+            const colorDot = document.createElement('span');
+            colorDot.className = 'group-color';
+            colorDot.style.backgroundColor = dancerColors[i];
+
+            const label = document.createElement('span');
+            label.textContent = `D${i+1}:`;
+            label.style.width = '25px';
+
+            const select = document.createElement('select');
+            select.className = 'group-select';
+            select.dataset.dancer = i;
+            for (let g = 1; g <= numGroups; g++) {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = `G${g}`;
+                if (dancerGroups[i] === g) opt.selected = true;
+                select.appendChild(opt);
+            }
+            select.onchange = (e) => {
+                dancerGroups[parseInt(e.target.dataset.dancer)] = parseInt(e.target.value);
+                updateTimingUI();
+            };
+
+            row.appendChild(colorDot);
+            row.appendChild(label);
+            row.appendChild(select);
+            container.appendChild(row);
+        }
+    }
+
+    function toggleMargin() {
+        showMargin = document.getElementById('showMargin').checked;
+        render();
+    }
+
+    function updateMargin() {
+        marginSize = parseFloat(document.getElementById('marginSize').value) || 1.0;
+        render();
+    }
+
+    function applyFormation(type) {
+        const spread = parseFloat(document.getElementById('formSpread').value) || 1.5;
+        const radius = parseFloat(document.getElementById('formRadius').value) || 3;
+        const t = parseFloat(document.getElementById('travelTime').value) || 3.0;
+        const s = parseFloat(document.getElementById('sleepTime').value) || 10;
+        const n = dancerCount;
+
+        const positions = [];
+
+        switch(type) {
+            case 'hline': { // Horizontal line with position control
+                const hlineDepth = parseFloat(document.getElementById('stageD').value) || 10;
+                const positionPct = parseFloat(document.getElementById('formPosition').value) || 50;
+                const yPos = (positionPct / 100 - 0.5) * hlineDepth; // 0%=front, 50%=center, 100%=back
+                for (let i = 0; i < n; i++) {
+                    const x = (i - (n-1)/2) * spread;
+                    positions.push({ x, y: yPos });
+                }
+                break;
+            }
+
+            case 'vline': // Vertical line (depth)
+                for (let i = 0; i < n; i++) {
+                    const y = (i - (n-1)/2) * spread;
+                    positions.push({ x: 0, y });
+                }
+                break;
+
+            case 'diagonal':
+                for (let i = 0; i < n; i++) {
+                    const offset = (i - (n-1)/2) * spread;
+                    positions.push({ x: offset, y: -offset });
+                }
+                break;
+
+            case 'diagonalBack':
+                for (let i = 0; i < n; i++) {
+                    const offset = (i - (n-1)/2) * spread;
+                    positions.push({ x: offset, y: offset });
+                }
+                break;
+
+            case 'circle':
+                for (let i = 0; i < n; i++) {
+                    const angle = (i / n) * Math.PI * 2 - Math.PI/2;
+                    positions.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
+                }
+                break;
+
+            case 'semicircle':
+                for (let i = 0; i < n; i++) {
+                    const angle = n > 1 ? (i / (n-1)) * Math.PI - Math.PI/2 : 0;
+                    positions.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
+                }
+                break;
+
+            case 'arc': // Arc facing audience (front of stage)
+                for (let i = 0; i < n; i++) {
+                    const angle = n > 1 ? Math.PI + (i / (n-1)) * Math.PI : Math.PI * 1.5;
+                    positions.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius + radius });
+                }
+                break;
+
+            case 'vshape':
+                for (let i = 0; i < n; i++) {
+                    const offset = (i - (n-1)/2);
+                    positions.push({ x: offset * spread, y: -Math.abs(offset) * spread });
+                }
+                break;
+
+            case 'invertedV':
+                for (let i = 0; i < n; i++) {
+                    const offset = (i - (n-1)/2);
+                    positions.push({ x: offset * spread, y: Math.abs(offset) * spread });
+                }
+                break;
+
+            case 'arrow': // Arrow pointing right (audience perspective)
+                for (let i = 0; i < n; i++) {
+                    const offset = (i - (n-1)/2);
+                    positions.push({ x: Math.abs(offset) * spread, y: offset * spread });
+                }
+                break;
+
+            case 'grid':
+                const cols = Math.ceil(Math.sqrt(n));
+                const rows = Math.ceil(n / cols);
+                for (let i = 0; i < n; i++) {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    positions.push({
+                        x: (col - (cols-1)/2) * spread,
+                        y: (row - (rows-1)/2) * spread
+                    });
+                }
+                break;
+
+            case 'staggered':
+                const sCols = Math.ceil(Math.sqrt(n));
+                const sRows = Math.ceil(n / sCols);
+                for (let i = 0; i < n; i++) {
+                    const col = i % sCols;
+                    const row = Math.floor(i / sCols);
+                    const stagger = (row % 2) * spread * 0.5;
+                    positions.push({
+                        x: (col - (sCols-1)/2) * spread + stagger,
+                        y: (row - (sRows-1)/2) * spread
+                    });
+                }
+                break;
+
+            case 'triangle':
+                let placed = 0;
+                let row = 0;
+                while (placed < n) {
+                    const inRow = row + 1;
+                    for (let col = 0; col < inRow && placed < n; col++) {
+                        positions.push({
+                            x: (col - row/2) * spread,
+                            y: -row * spread * 0.866
+                        });
+                        placed++;
+                    }
+                    row++;
+                }
+                break;
+
+            case 'random':
+                const stageW = parseFloat(document.getElementById('stageW').value) || 15;
+                const stageD = parseFloat(document.getElementById('stageD').value) || 10;
+                const margin = marginSize;
+                for (let i = 0; i < n; i++) {
+                    positions.push({
+                        x: (Math.random() - 0.5) * (stageW - margin*2),
+                        y: (Math.random() - 0.5) * (stageD - margin*2)
+                    });
+                }
+                break;
+
+            case 'cluster':
+                for (let i = 0; i < n; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * radius * 0.5;
+                    positions.push({ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist });
+                }
+                break;
+        }
+
+        // Apply positions to dancers
+        for (let i = 0; i < n && i < positions.length; i++) {
+            const existing = layers[currentLayer][i];
+            const z = existing ? (existing.z || 0) : 0;
+            layers[currentLayer][i] = {
+                x: positions[i].x,
+                y: positions[i].y,
+                z: z,
+                t: existing ? existing.t : t,
+                s: existing ? existing.s : s,
+                r: 0
+            };
+        }
+        render();
+    }
+
+    function parseStage() {
+        const raw = document.getElementById('stageInput').value;
+        // Regex to find the <x, y, z> part
+        const match = raw.match(/<([^>]+)>/);
+        if (match) {
+            const coords = match[1].split(',').map(Number);
+            stageCenter = { x: coords[0], y: coords[1], z: coords[2] };
+            alert(`Stage center set to: ${stageCenter.x}, ${stageCenter.y}`);
+        }
+    }
+
+    function getOrCreateDancer() {
+        const existing = layers[currentLayer][selectedDancer];
+        if (existing) return existing;
+        const t = parseFloat(document.getElementById('travelTime').value) || 3.0;
+        const s = parseFloat(document.getElementById('sleepTime').value) || 10;
+        return { x: 0, y: 0, z: 0, t: t, s: s, r: 0 };
+    }
+
+    // Top view: edit X and Y
+    topCanvas.addEventListener('mousedown', (e) => {
+        const rect = topCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const meterX = (mouseX - topCanvas.width/2) / ppm;
+        const meterY = (topCanvas.height/2 - mouseY) / ppm;
+
+        const d = getOrCreateDancer();
+        d.x = meterX;
+        d.y = meterY;
+        layers[currentLayer][selectedDancer] = d;
+        updateTimingUI();
+        render();
+    });
+
+    // Front view: edit X and Z
+    frontCanvas.addEventListener('mousedown', (e) => {
+        const rect = frontCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const meterX = (mouseX - frontCanvas.width/2) / ppm;
+        const meterZ = (frontCanvas.height - mouseY) / ppm; // Z=0 at bottom
+
+        const d = getOrCreateDancer();
+        d.x = meterX;
+        d.z = meterZ;
+        layers[currentLayer][selectedDancer] = d;
+        updateTimingUI();
+        render();
+    });
+
+    // Side view: edit Y and Z
+    sideCanvas.addEventListener('mousedown', (e) => {
+        const rect = sideCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const meterY = (mouseX - sideCanvas.width/2) / ppm;
+        const meterZ = (sideCanvas.height - mouseY) / ppm; // Z=0 at bottom
+
+        const d = getOrCreateDancer();
+        d.y = meterY;
+        d.z = meterZ;
+        layers[currentLayer][selectedDancer] = d;
+        updateTimingUI();
+        render();
+    });
+
+    function changeLayer(dir) {
+        currentLayer += dir;
+        if (currentLayer < 0) currentLayer = 0;
+        if (!layers[currentLayer]) {
+            // Clone previous layer as a starting point for the new one
+            const newLayer = JSON.parse(JSON.stringify(layers[currentLayer - 1]));
+            layers.push(newLayer);
+        }
+        const layerLabel = currentLayer === 0 ? 'Layer: 1 (Start)' : `Layer: ${currentLayer + 1}`;
+        document.getElementById('layerDisplay').innerText = layerLabel;
+        updateTimingUI();
+        render();
+    }
+
+    function updateTimingUI() {
+        const d = layers[currentLayer][selectedDancer];
+        if (d) {
+            document.getElementById('travelTime').value = d.t;
+            document.getElementById('sleepTime').value = d.s;
+        }
+
+        // Disable travel time on first layer (starting position)
+        const travelInput = document.getElementById('travelTime');
+        if (currentLayer === 0) {
+            travelInput.disabled = true;
+            travelInput.style.opacity = '0.5';
+            travelInput.title = 'Layer 1 is the starting position - no travel time';
+        } else {
+            travelInput.disabled = false;
+            travelInput.style.opacity = '1';
+            travelInput.title = '';
+        }
+
+        // Update group label
+        const group = dancerGroups[selectedDancer];
+        const groupLabel = document.getElementById('currentGroupLabel');
+        if (numGroups === 1) {
+            groupLabel.textContent = '(All dancers)';
+        } else {
+            // Find which dancers are in this group
+            const groupMembers = [];
+            for (let i = 0; i < dancerCount; i++) {
+                if (dancerGroups[i] === group) groupMembers.push(i + 1);
+            }
+            groupLabel.textContent = `(Group ${group}: D${groupMembers.join(', D')})`;
+        }
+    }
+
+    function updateGroupTiming() {
+        const t = parseFloat(document.getElementById('travelTime').value) || 3.0;
+        const s = parseFloat(document.getElementById('sleepTime').value) || 0;
+        const currentGroup = dancerGroups[selectedDancer];
+
+        // Apply timing to all dancers in the same group
+        for (let i = 0; i < dancerCount; i++) {
+            if (dancerGroups[i] === currentGroup && layers[currentLayer][i]) {
+                layers[currentLayer][i].t = t;
+                layers[currentLayer][i].s = s;
+            }
+        }
+    }
+
+    function drawGrid(ctx, canvas) {
+        ctx.strokeStyle = '#333';
+        for(let i=0; i<canvas.width; i+=ppm) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+        for(let i=0; i<canvas.height; i+=ppm) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
+    }
+
+    function drawCenterMark(ctx, cx, cy) {
+        ctx.strokeStyle = '#444';
+        ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx - 18, cy); ctx.lineTo(cx - 8, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + 8, cy); ctx.lineTo(cx + 18, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, cy - 18); ctx.lineTo(cx, cy - 8); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, cy + 8); ctx.lineTo(cx, cy + 18); ctx.stroke();
+    }
+
+    function drawStageShape(ctx, canvas) {
+        const shape = document.getElementById('stageShape').value;
+        const margin = marginSize * ppm;
+        const w = canvas.width;
+        const h = canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+
+        ctx.strokeStyle = '#886600';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 4]);
+        ctx.beginPath();
+
+        switch(shape) {
+            case 'rectangle':
+                ctx.rect(margin, margin, w - margin * 2, h - margin * 2);
+                break;
+
+            case 'semicircle': {
+                // Half circle - curved edge toward audience (front/bottom)
+                const radius = Math.min(w / 2, h) - margin;
+                ctx.arc(cx, margin, radius, 0, Math.PI);
+                ctx.closePath();
+                break;
+            }
+
+            case 'halfoval': {
+                // Half oval - curved edge toward audience (front/bottom)
+                const rx = w / 2 - margin;
+                const ry = h - margin * 2;
+                ctx.ellipse(cx, margin, rx, ry, 0, 0, Math.PI);
+                ctx.closePath();
+                break;
+            }
+
+            case 'thrust': {
+                // Rectangle with semicircle extension at front
+                const rectH = h * 0.6;
+                const thrustRadius = (w / 2 - margin) * 0.6;
+                // Back and sides of rectangle
+                ctx.moveTo(margin, margin);
+                ctx.lineTo(w - margin, margin);
+                ctx.lineTo(w - margin, margin + rectH);
+                // Right side to thrust
+                ctx.lineTo(cx + thrustRadius, margin + rectH);
+                // Semicircle thrust
+                ctx.arc(cx, margin + rectH, thrustRadius, 0, Math.PI);
+                // Left side back up
+                ctx.lineTo(margin, margin + rectH);
+                ctx.closePath();
+                break;
+            }
+
+            case 'trapezoid': {
+                // Wider at back, narrower at front
+                const backInset = margin;
+                const frontInset = w * 0.15 + margin;
+                ctx.moveTo(backInset, margin);
+                ctx.lineTo(w - backInset, margin);
+                ctx.lineTo(w - frontInset, h - margin);
+                ctx.lineTo(frontInset, h - margin);
+                ctx.closePath();
+                break;
+            }
+        }
+
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
+    }
+
+    function drawGroundLine(ctx, canvas) {
+        // Draw ground line (Z=0)
+        ctx.strokeStyle = '#553300';
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.stroke();
+    }
+
+    function drawMovementPaths(ctx, canvas, view) {
+        const showPaths = document.getElementById('showPaths').checked;
+        if (!showPaths) return;
+
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i < dancerCount; i++) {
+            ctx.strokeStyle = dancerColors[i];
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            let started = false;
+
+            for (let l = 0; l <= currentLayer; l++) {
+                const d = layers[l] ? layers[l][i] : null;
+                if (!d) continue;
+
+                let px, py;
+                if (view === 'top') {
+                    px = canvas.width/2 + (d.x * ppm);
+                    py = canvas.height/2 - (d.y * ppm);
+                } else if (view === 'front') {
+                    px = canvas.width/2 + (d.x * ppm);
+                    py = canvas.height - ((d.z || 0) * ppm);
+                } else if (view === 'side') {
+                    px = canvas.width/2 + (d.y * ppm);
+                    py = canvas.height - ((d.z || 0) * ppm);
+                }
+
+                if (!started) {
+                    ctx.moveTo(px, py);
+                    started = true;
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.stroke();
+        }
+
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1.0;
+        ctx.lineWidth = 1;
+    }
+
+    function render() {
+        // ===== TOP VIEW (X-Y) =====
+        topCtx.clearRect(0, 0, topCanvas.width, topCanvas.height);
+        drawGrid(topCtx, topCanvas);
+        drawCenterMark(topCtx, topCanvas.width/2, topCanvas.height/2);
+
+        if (showMargin) {
+            drawStageShape(topCtx, topCanvas);
+        }
+
+        // Front indicator
+        topCtx.fillStyle = '#664400';
+        topCtx.font = '11px sans-serif';
+        topCtx.textAlign = 'center';
+        topCtx.fillText('▼ FRONT (Audience) ▼', topCanvas.width / 2, topCanvas.height - 5);
+
+        // Movement paths for top view
+        drawMovementPaths(topCtx, topCanvas, 'top');
+
+        // ===== FRONT VIEW (X-Z) =====
+        frontCtx.clearRect(0, 0, frontCanvas.width, frontCanvas.height);
+        drawGrid(frontCtx, frontCanvas);
+        drawGroundLine(frontCtx, frontCanvas);
+        // Center line for X
+        frontCtx.strokeStyle = '#444';
+        frontCtx.beginPath();
+        frontCtx.moveTo(frontCanvas.width/2, 0);
+        frontCtx.lineTo(frontCanvas.width/2, frontCanvas.height);
+        frontCtx.stroke();
+
+        // Movement paths for front view
+        drawMovementPaths(frontCtx, frontCanvas, 'front');
+
+        // ===== SIDE VIEW (Y-Z) =====
+        sideCtx.clearRect(0, 0, sideCanvas.width, sideCanvas.height);
+        drawGrid(sideCtx, sideCanvas);
+        drawGroundLine(sideCtx, sideCanvas);
+        // Center line for Y
+        sideCtx.strokeStyle = '#444';
+        sideCtx.beginPath();
+        sideCtx.moveTo(sideCanvas.width/2, 0);
+        sideCtx.lineTo(sideCanvas.width/2, sideCanvas.height);
+        sideCtx.stroke();
+
+        // Side view label - front of stage is on the left (negative Y)
+        sideCtx.fillStyle = '#664400';
+        sideCtx.font = '11px sans-serif';
+        sideCtx.textAlign = 'left';
+        sideCtx.fillText('◄ FRONT', 5, sideCanvas.height - 5);
+        sideCtx.textAlign = 'right';
+        sideCtx.fillText('BACK ►', sideCanvas.width - 5, sideCanvas.height - 5);
+
+        // Movement paths for side view
+        drawMovementPaths(sideCtx, sideCanvas, 'side');
+
+        // ===== DRAW DANCERS ON ALL VIEWS =====
+        for (let l = 0; l <= currentLayer; l++) {
+            const isCurrent = (l === currentLayer);
+            const layersBack = currentLayer - l;
+            const opacity = isCurrent ? 1.0 : 0.5 * Math.pow(0.7, layersBack);
+            if (opacity < 0.05) continue;
+
+            layers[l].forEach((d, i) => {
+                if (!d) return;
+                if (i >= dancerCount) return; // Only render active dancers
+                const radius = isCurrent ? 8 : 4;
+
+                // Top view (X-Y)
+                const topX = topCanvas.width/2 + (d.x * ppm);
+                const topY = topCanvas.height/2 - (d.y * ppm);
+                topCtx.globalAlpha = opacity;
+                topCtx.fillStyle = dancerColors[i];
+                topCtx.beginPath();
+                topCtx.arc(topX, topY, radius, 0, Math.PI * 2);
+                topCtx.fill();
+                if (isCurrent) {
+                    topCtx.strokeStyle = "white";
+                    topCtx.stroke();
+                    topCtx.fillStyle = "white";
+                    topCtx.fillText(i+1, topX - 3, topY - 12);
+                }
+
+                // Front view (X-Z)
+                const frontX = frontCanvas.width/2 + (d.x * ppm);
+                const frontY = frontCanvas.height - ((d.z || 0) * ppm);
+                frontCtx.globalAlpha = opacity;
+                frontCtx.fillStyle = dancerColors[i];
+                frontCtx.beginPath();
+                frontCtx.arc(frontX, frontY, radius, 0, Math.PI * 2);
+                frontCtx.fill();
+                if (isCurrent) {
+                    frontCtx.strokeStyle = "white";
+                    frontCtx.stroke();
+                    frontCtx.fillStyle = "white";
+                    frontCtx.fillText(i+1, frontX - 3, frontY - 12);
+                }
+
+                // Side view (Y-Z)
+                const sideX = sideCanvas.width/2 + (d.y * ppm);
+                const sideY = sideCanvas.height - ((d.z || 0) * ppm);
+                sideCtx.globalAlpha = opacity;
+                sideCtx.fillStyle = dancerColors[i];
+                sideCtx.beginPath();
+                sideCtx.arc(sideX, sideY, radius, 0, Math.PI * 2);
+                sideCtx.fill();
+                if (isCurrent) {
+                    sideCtx.strokeStyle = "white";
+                    sideCtx.stroke();
+                    sideCtx.fillStyle = "white";
+                    sideCtx.fillText(i+1, sideX - 3, sideY - 12);
+                }
+            });
+        }
+        topCtx.globalAlpha = 1.0;
+        frontCtx.globalAlpha = 1.0;
+        sideCtx.globalAlpha = 1.0;
+    }
+
+    function formatPosOffset() {
+        return `<${stageCenter.x.toFixed(5)}, ${stageCenter.y.toFixed(5)}, ${stageCenter.z.toFixed(5)}>`;
+    }
+
+    function formatDancerNotecard(dIdx) {
+        const firstPos = layers[0] ? layers[0][dIdx] : null;
+        if (!firstPos) return '';
+
+        // @pos_offset = stage center + dancer's layer 1 position (where they actually start)
+        const startX = stageCenter.x + firstPos.x;
+        const startY = stageCenter.y + firstPos.y;
+        const startZ = stageCenter.z + (firstPos.z || 0);
+
+        let output = `@spot_dancer ${dIdx + 1}\n@pos_offset <${startX.toFixed(5)}, ${startY.toFixed(5)}, ${startZ.toFixed(5)}>\n@rot_offset <0.00000, 0.00000, 0.00000, 1.00000>\n`;
+
+        // All positions are relative to the dancer's starting position
+        layers.forEach((layer, layerIdx) => {
+            const d = layer[dIdx];
+            if (!d) return;
+            const x = d.x - firstPos.x;
+            const y = d.y - firstPos.y;
+            const z = (d.z || 0) - (firstPos.z || 0);
+            const travelTime = (layerIdx === 0) ? 0 : d.t;
+            output += `<${x.toFixed(6)}, ${y.toFixed(6)}, ${z.toFixed(6)}>, <0.000000, 0.000000, 0.000000, 1.000000>, ${travelTime.toFixed(6)}, ${d.s.toFixed(6)}, 0, 0.500000\n`;
+        });
+        return output;
+    }
+
+    function generateNotecard() {
+        const dIdx = parseInt(document.getElementById('exportDancer').value) - 1;
+        document.getElementById('output').value = formatDancerNotecard(dIdx);
+    }
+
+    function generateAllNotecards() {
+        let output = '';
+        for (let dIdx = 0; dIdx < dancerCount; dIdx++) {
+            output += `// Dancer ${dIdx + 1} (${dancerNames[dIdx]})\n`;
+            output += formatDancerNotecard(dIdx);
+            output += '\n';
+        }
+        document.getElementById('output').value = output;
+    }
+
+    // ===== LIVE CONTROL (Send to SL) =====
+    async function sendToSL() {
+        const url = document.getElementById('slUrl').value.trim();
+        if (!url) { alert('Paste the controller URL first'); return; }
+
+        const status = document.getElementById('slStatus');
+        status.textContent = 'Sending...';
+        status.style.color = '#ff0';
+
+        try {
+            for (let dIdx = 0; dIdx < dancerCount; dIdx++) {
+                const firstPos = layers[0] ? layers[0][dIdx] : null;
+                if (!firstPos) continue;
+
+                // Build compact format: DANCER|num|x,y,z,travel,sleep|...
+                // Positions are ABSOLUTE (relative to stage center, not to dancer's own start)
+                let data = `DANCER|${dIdx + 1}`;
+                layers.forEach((layer, layerIdx) => {
+                    const d = layer[dIdx];
+                    if (!d) return;
+                    const x = d.x.toFixed(3);
+                    const y = d.y.toFixed(3);
+                    const z = (d.z || 0).toFixed(3);
+                    const travel = (layerIdx === 0) ? '0' : d.t.toFixed(1);
+                    const sleep = d.s.toFixed(1);
+                    data += `|${x},${y},${z},${travel},${sleep}`;
+                });
+
+                status.textContent = `Sending dancer ${dIdx + 1}/${dancerCount}...`;
+
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: data
+                });
+
+                // Delay between dancers so SL script can process each one
+                if (dIdx < dancerCount - 1) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+
+            status.textContent = dancerCount + ' dancers sent';
+            status.style.color = '#0f0';
+        } catch (e) {
+            status.textContent = 'Send failed: ' + e.message;
+            status.style.color = '#f00';
+        }
+    }
+
+    async function sendCommand(cmd) {
+        const url = document.getElementById('slUrl').value.trim();
+        if (!url) { alert('Paste the controller URL first'); return; }
+
+        const status = document.getElementById('slStatus');
+        try {
+            await fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: cmd
+            });
+            status.textContent = cmd + ' sent';
+            status.style.color = '#0f0';
+        } catch (e) {
+            status.textContent = cmd + ' failed: ' + e.message;
+            status.style.color = '#f00';
+        }
+    }
+
+    // ===== PROJECT SAVE/LOAD =====
+    function getProjectState() {
+        return {
+            version: 3,
+            layers: layers,
+            currentLayer: currentLayer,
+            dancerCount: dancerCount,
+            numGroups: numGroups,
+            dancerGroups: dancerGroups,
+            stageCenter: stageCenter,
+            stageW: document.getElementById('stageW').value,
+            stageD: document.getElementById('stageD').value,
+            stageH: document.getElementById('stageH').value,
+            stageShape: document.getElementById('stageShape').value,
+            marginSize: document.getElementById('marginSize').value,
+            showMargin: document.getElementById('showMargin').checked,
+            showPaths: document.getElementById('showPaths').checked,
+            formSpread: document.getElementById('formSpread').value,
+            formRadius: document.getElementById('formRadius').value,
+            formPosition: document.getElementById('formPosition').value
+        };
+    }
+
+    function setProjectState(state) {
+        if (!state) return;
+
+        // Load data
+        layers = state.layers || [ Array(12).fill(null) ];
+        currentLayer = state.currentLayer || 0;
+        dancerCount = state.dancerCount || 6;
+        numGroups = state.numGroups || 1;
+        dancerGroups = state.dancerGroups || [1,1,1,1,1,1,1,1,1,1,1,1];
+        if (state.stageCenter) stageCenter = state.stageCenter;
+
+        // Load UI values
+        if (state.stageW) document.getElementById('stageW').value = state.stageW;
+        if (state.stageD) document.getElementById('stageD').value = state.stageD;
+        if (state.stageH) document.getElementById('stageH').value = state.stageH;
+        if (state.stageShape) document.getElementById('stageShape').value = state.stageShape;
+        if (state.marginSize) document.getElementById('marginSize').value = state.marginSize;
+        if (state.showMargin !== undefined) document.getElementById('showMargin').checked = state.showMargin;
+        if (state.showPaths !== undefined) document.getElementById('showPaths').checked = state.showPaths;
+        if (state.formSpread) document.getElementById('formSpread').value = state.formSpread;
+        if (state.formRadius) document.getElementById('formRadius').value = state.formRadius;
+        if (state.formPosition) document.getElementById('formPosition').value = state.formPosition;
+
+        document.getElementById('dancerCount').value = dancerCount;
+        document.getElementById('numGroups').value = numGroups;
+
+        // Update display
+        marginSize = parseFloat(state.marginSize) || 1.0;
+        showMargin = state.showMargin !== undefined ? state.showMargin : true;
+
+        const layerLabel = currentLayer === 0 ? 'Layer: 1 (Start)' : `Layer: ${currentLayer + 1}`;
+        document.getElementById('layerDisplay').innerText = layerLabel;
+    }
+
+    function autoSave() {
+        try {
+            const state = getProjectState();
+            localStorage.setItem('choreoProject', JSON.stringify(state));
+            const status = document.getElementById('autoSaveStatus');
+            if (status) {
+                status.textContent = 'Saved ' + new Date().toLocaleTimeString();
+            }
+        } catch (e) {
+            console.warn('Auto-save failed:', e);
+        }
+    }
+
+    function loadFromStorage() {
+        try {
+            const saved = localStorage.getItem('choreoProject');
+            if (saved) {
+                const state = JSON.parse(saved);
+                setProjectState(state);
+                return true;
+            }
+        } catch (e) {
+            console.warn('Load from storage failed:', e);
+        }
+        return false;
+    }
+
+    function exportProject() {
+        const state = getProjectState();
+        const json = JSON.stringify(state, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'choreo-project-' + new Date().toISOString().slice(0,10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function importProject(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const state = JSON.parse(e.target.result);
+                setProjectState(state);
+                updateCanvasSize();
+                buildDancerUI();
+                buildGroupAssignmentsUI();
+                updateTimingUI();
+                render();
+                autoSave();
+                alert('Project imported successfully!');
+            } catch (err) {
+                alert('Failed to import project: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset file input
+    }
+
+    function newProject() {
+        if (!confirm('Start a new project? This will clear all current data.')) return;
+
+        // Clear localStorage
+        localStorage.removeItem('choreoProject');
+
+        // Reset all state to defaults
+        layers = [ Array(12).fill(null) ];
+        currentLayer = 0;
+        selectedDancer = 0;
+        dancerCount = 6;
+        numGroups = 1;
+        dancerGroups = [1,1,1,1,1,1,1,1,1,1,1,1];
+        marginSize = 1.0;
+        showMargin = true;
+
+        // Reset UI values
+        document.getElementById('stageW').value = 15;
+        document.getElementById('stageD').value = 10;
+        document.getElementById('stageH').value = 3;
+        document.getElementById('stageShape').value = 'rectangle';
+        document.getElementById('marginSize').value = 1.0;
+        document.getElementById('showMargin').checked = true;
+        document.getElementById('showPaths').checked = false;
+        document.getElementById('formSpread').value = 1.5;
+        document.getElementById('formRadius').value = 3;
+        document.getElementById('formPosition').value = 50;
+        document.getElementById('dancerCount').value = 6;
+        document.getElementById('numGroups').value = 1;
+        document.getElementById('travelTime').value = 3.0;
+        document.getElementById('sleepTime').value = 10;
+        document.getElementById('layerDisplay').innerText = 'Layer: 1 (Start)';
+        document.getElementById('groupModeLabel').textContent = '(All sync)';
+        document.getElementById('output').value = '';
+
+        // Rebuild UI
+        updateCanvasSize();
+        buildDancerUI();
+        buildGroupAssignmentsUI();
+        updateTimingUI();
+        render();
+    }
+
+    // Wrap functions that modify state to auto-save
+    const originalRender = render;
+    render = function() {
+        originalRender();
+        autoSave();
+    };
+
+    init();
+</script>
+</body>
+</html>
