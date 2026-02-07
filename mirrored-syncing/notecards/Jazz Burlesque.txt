@@ -1,0 +1,26 @@
+# Jazz Burlesque — Abranimations (20 dances)
+# Duration-aware — auto-advance supported
+
+# Slow
+Jazz Burlesque Slow 1:33.9
+Jazz Burlesque Slow 2:32
+Jazz Burlesque Slow 3:30.3
+Jazz Burlesque Slow 4:32
+Jazz Burlesque Slow 5:33.5
+Jazz Burlesque Slow 6:33.2
+Jazz Burlesque Slow 7:22.2
+Jazz Burlesque Slow 8:33.2
+Jazz Burlesque Slow 9:37
+Jazz Burlesque Slow 10:32.5
+Jazz Burlesque Slow 11:34
+
+# Quick
+Quick Jazz Burlesque 1:28.3
+Quick Jazz Burlesque 2:32
+Quick Jazz Burlesque 3:29.4
+Quick Jazz Burlesque 4:33.2
+Quick Jazz Burlesque 5:29
+Quick Jazz Burlesque 6:34.6
+Quick Jazz Burlesque 7:30
+Quick Jazz Burlesque 8:31.6
+Quick Jazz Burlesque 9:31.3

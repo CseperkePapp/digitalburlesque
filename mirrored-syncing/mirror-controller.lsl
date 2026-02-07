@@ -1,4 +1,4 @@
-// Mirror Sync Dance Controller v1.2
+// Mirror Sync Dance Controller v1.7
 // Place in a prim at your dance area.
 // Also place: mirror-slot 1 through mirror-slot 8, plus all dance animations
 // (both original and mirrored versions).
@@ -11,7 +11,6 @@
 // CONFIGURATION
 // ============================================================================
 
-integer MIRROR_CHANNEL = -9876545;
 integer MAX_SLOTS = 8;          // 1-4 per group, 8 total max
 
 // ============================================================================
@@ -24,7 +23,6 @@ string g_url = "";
 // Slot tracking — parallel lists, indexed by (slotNum - 1)
 // Group: 0 = unassigned, 1 = Group A (original), 2 = Group B (mirror)
 list g_slotAvatars;     // 8 keys
-list g_slotNames;       // 8 strings
 list g_slotGroups;      // 8 integers
 list g_slotPerms;       // 8 integers (0/1)
 
@@ -43,6 +41,15 @@ string RULE_SEP = ";;";
 list g_scannedKeys;
 list g_scannedNames;
 
+// Notecard reading (async)
+key g_ncReqId;
+string g_ncName = "";
+integer g_ncLine = 0;
+
+// Duration-aware playback
+list g_playDurations = [];    // parallel to g_playlist — seconds per anim (0 = manual)
+integer g_autoAdvance = FALSE; // auto-advance mode on/off
+
 // Menu system
 integer g_menuChan;
 integer g_menuHandle;
@@ -56,34 +63,15 @@ string g_menuContext = "";  // tracks which menu is open
 initSlots()
 {
     g_slotAvatars = [];
-    g_slotNames = [];
     g_slotGroups = [];
     g_slotPerms = [];
     integer i;
     for (i = 0; i < MAX_SLOTS; i++)
     {
         g_slotAvatars += [NULL_KEY];
-        g_slotNames += [""];
         g_slotGroups += [0];
         g_slotPerms += [0];
     }
-}
-
-// Apply a single rule to derive a mirror name
-string applyRule(string rule, string animName)
-{
-    integer idx = llSubStringIndex(rule, "{name}");
-    if (idx == -1) return animName;
-
-    string before = "";
-    string after = "";
-    if (idx > 0)
-        before = llGetSubString(rule, 0, idx - 1);
-    integer endIdx = idx + 5; // "{name}" is 6 chars, last char index = idx+5
-    if (endIdx < llStringLength(rule) - 1)
-        after = llGetSubString(rule, endIdx + 1, -1);
-
-    return before + animName + after;
 }
 
 // Derive mirrored animation name — tries each rule in order,
@@ -96,13 +84,25 @@ string getMirrorName(string animName)
     integer count = llGetListLength(g_mirrorRules);
     for (i = 0; i < count; i++)
     {
-        string derived = applyRule(llList2String(g_mirrorRules, i), animName);
+        string rule = llList2String(g_mirrorRules, i);
+        integer idx = llSubStringIndex(rule, "{name}");
+        string derived;
+        if (idx == -1)
+            derived = animName;
+        else
+        {
+            string before = "";
+            string after = "";
+            if (idx > 0) before = llGetSubString(rule, 0, idx - 1);
+            integer endIdx = idx + 5;
+            if (endIdx < llStringLength(rule) - 1)
+                after = llGetSubString(rule, endIdx + 1, -1);
+            derived = before + animName + after;
+        }
         if (i == 0) fallback = derived;
-        // Check if this animation exists in the prim's inventory
         if (llGetInventoryType(derived) == INVENTORY_ANIMATION)
             return derived;
     }
-    // None found in inventory — return first rule's result as fallback
     return fallback;
 }
 
@@ -156,14 +156,11 @@ assignAvatar(key av, integer group)
 
     integer idx = slotNum - 1;
     g_slotAvatars = llListReplaceList(g_slotAvatars, [av], idx, idx);
-    g_slotNames = llListReplaceList(g_slotNames, [llGetDisplayName(av)], idx, idx);
     g_slotGroups = llListReplaceList(g_slotGroups, [group], idx, idx);
     g_slotPerms = llListReplaceList(g_slotPerms, [0], idx, idx);
 
     // Tell slot script to request animation permissions
     llMessageLinked(LINK_THIS, slotNum, "ASSIGN", av);
-    llOwnerSay("Assigned " + llGetDisplayName(av) + " to slot " + (string)slotNum
-        + " Group " + llList2String(["?", "A", "B"], group));
 }
 
 // Release a slot
@@ -172,15 +169,10 @@ releaseSlot(integer slotNum)
     if (slotNum < 1 || slotNum > MAX_SLOTS) return;
     integer idx = slotNum - 1;
 
-    key av = llList2Key(g_slotAvatars, idx);
-    if (av != NULL_KEY)
-    {
+    if (llList2Key(g_slotAvatars, idx) != NULL_KEY)
         llMessageLinked(LINK_THIS, slotNum, "RELEASE", "");
-        llOwnerSay("Released " + llList2String(g_slotNames, idx) + " from slot " + (string)slotNum);
-    }
 
     g_slotAvatars = llListReplaceList(g_slotAvatars, [NULL_KEY], idx, idx);
-    g_slotNames = llListReplaceList(g_slotNames, [""], idx, idx);
     g_slotGroups = llListReplaceList(g_slotGroups, [0], idx, idx);
     g_slotPerms = llListReplaceList(g_slotPerms, [0], idx, idx);
 }
@@ -213,7 +205,17 @@ playCurrentAnim()
     }
 
     g_playing = TRUE;
-    llOwnerSay("Playing: " + g_currentAnim + " (A) / " + mirrorAnim + " (B)  [" + (string)(g_playIdx + 1) + "/" + (string)llGetListLength(g_playlist) + "]");
+
+    // Auto-advance timer
+    if (g_autoAdvance && llGetListLength(g_playDurations) > g_playIdx)
+    {
+        float dur = llList2Float(g_playDurations, g_playIdx);
+        if (dur > 0.0)
+            llSetTimerEvent(dur);
+        else
+            llSetTimerEvent(0.0);
+    }
+
     updateHovertext();
 }
 
@@ -222,6 +224,7 @@ stopAllAnims()
 {
     llMessageLinked(LINK_THIS, 0, "STOPALL", "");
     g_playing = FALSE;
+    llSetTimerEvent(0.0);
     updateHovertext();
 }
 
@@ -251,14 +254,20 @@ updateHovertext()
     text += "\nGroup A: " + (string)countA + "  Group B: " + (string)countB;
 
     if (g_playing && g_currentAnim != "")
+    {
         text += "\nPlaying: " + g_currentAnim + " [" + (string)(g_playIdx + 1) + "/" + (string)llGetListLength(g_playlist) + "]";
+        if (g_autoAdvance) text += " [Auto]";
+    }
     else if (llGetListLength(g_playlist) > 0)
         text += "\nPlaylist: " + (string)llGetListLength(g_playlist) + " dances (stopped)";
     else
         text += "\nNo playlist loaded";
 
-    text += "\nRules: " + llDumpList2String(g_mirrorRules, " | ");
-    text += "\nTouch to open menu";
+    integer totalDancers = countA + countB;
+    if (totalDancers < MAX_SLOTS)
+        text += "\nTouch to join (" + (string)(MAX_SLOTS - totalDancers) + " slots open)";
+    else
+        text += "\nAll slots full";
 
     vector color = <0, 1, 0>;
     if (g_url == "") color = <1, 1, 0>;
@@ -277,7 +286,7 @@ string getStatusString()
         if (av != NULL_KEY)
         {
             out += "|" + (string)(i + 1) + ","
-                + llList2String(g_slotNames, i) + ","
+                + llKey2Name(av) + ","
                 + llList2String(["U", "A", "B"], llList2Integer(g_slotGroups, i)) + ","
                 + (string)llList2Integer(g_slotPerms, i);
         }
@@ -324,7 +333,9 @@ openMenu(key user, string title, list buttons)
     g_menuHandle = llListen(g_menuChan, "", user, "");
     g_menuUser = user;
     llDialog(user, title, buttons, g_menuChan);
-    llSetTimerEvent(60.0); // menu timeout
+    // Only set menu timeout if auto-advance isn't controlling the timer
+    if (!g_playing || !g_autoAdvance)
+        llSetTimerEvent(60.0);
 }
 
 showMainMenu(key user)
@@ -335,10 +346,16 @@ showMainMenu(key user)
         + "Playlist: " + (string)llGetListLength(g_playlist) + " dances";
     if (g_playing)
         title += "\nNow playing: " + g_currentAnim;
+    if (g_autoAdvance)
+        title += "\nAuto-advance: ON";
+
+    string autoLabel;
+    if (g_autoAdvance) autoLabel = "Auto: OFF";
+    else autoLabel = "Auto: ON";
 
     list buttons = ["Scan", "Groups", "Playlist",
                     "Play", "Stop", "Next",
-                    "Prev", "Mirror Rule", "Reset"];
+                    "Prev", autoLabel, "Reset"];
     openMenu(user, title, buttons);
 }
 
@@ -376,13 +393,13 @@ showGroupMenu(key user)
     for (i = 0; i < MAX_SLOTS; i++)
     {
         if (llList2Key(g_slotAvatars, i) != NULL_KEY && llList2Integer(g_slotGroups, i) == 1)
-            title += "\n  " + (string)(i+1) + ". " + llList2String(g_slotNames, i);
+            title += "\n  " + (string)(i+1) + ". " + llKey2Name(llList2Key(g_slotAvatars, i));
     }
     title += "\n--- Group B (Mirror) ---";
     for (i = 0; i < MAX_SLOTS; i++)
     {
         if (llList2Key(g_slotAvatars, i) != NULL_KEY && llList2Integer(g_slotGroups, i) == 2)
-            title += "\n  " + (string)(i+1) + ". " + llList2String(g_slotNames, i);
+            title += "\n  " + (string)(i+1) + ". " + llKey2Name(llList2Key(g_slotAvatars, i));
     }
 
     openMenu(user, title, ["Swap Slot", "Remove Slot", "Auto Assign",
@@ -405,91 +422,80 @@ showPlaylistMenu(key user)
     if (llGetListLength(g_playlist) > 5)
         title += "\n  ... +" + (string)(llGetListLength(g_playlist) - 5) + " more";
 
-    // Load animations from prim inventory
-    list buttons = ["Load from Inv", "Clear List", "Back"];
+    // Load animations from prim inventory or notecards
+    list buttons = ["Load from Inv", "Notecards", "Clear List", "Back"];
     openMenu(user, title, buttons);
 }
 
-showMirrorRuleMenu(key user)
+showNotecardMenu(key user)
 {
-    g_menuContext = "mirrorrule";
-    string title = "Mirror naming rules (tried in order):";
+    g_menuContext = "notecards";
+    integer count = llGetInventoryNumber(INVENTORY_NOTECARD);
+    if (count == 0)
+    {
+        openMenu(user, "No notecards found in prim inventory.\nDrop notecard files into this prim.", ["Back"]);
+        return;
+    }
+
+    string title = "Select a notecard to load:";
+    list buttons = [];
     integer i;
-    for (i = 0; i < llGetListLength(g_mirrorRules); i++)
-        title += "\n  " + (string)(i+1) + ". " + llList2String(g_mirrorRules, i);
-    title += "\n\nExample: dance1 -> " + getMirrorName("dance1");
-    title += "\nSelect a rule to add/toggle:";
-    openMenu(user, title, ["{name}_Mirror", "{name} (mirror)", "{name} [M]",
-                           "{name} (Mirrored)", "{name} Mirror", "{name} [Mirrored]",
-                           "Clear Rules", "Back"]);
+    if (count > 10) count = 10; // llDialog max 12 buttons, save 2 for nav
+    for (i = 0; i < count; i++)
+    {
+        string name = llGetInventoryName(INVENTORY_NOTECARD, i);
+        // Truncate to 24 chars (llDialog button limit)
+        if (llStringLength(name) > 24)
+            name = llGetSubString(name, 0, 23);
+        buttons += [name];
+    }
+    buttons += ["Back"];
+    openMenu(user, title, buttons);
 }
 
-// Check if an animation name looks like a mirror derivative of some other name
+// Check if an animation name looks like a mirror derivative (simple suffix check)
 integer isMirrorName(string animName)
 {
-    // For each rule, check if animName could be a mirror output.
-    // E.g. for rule "{name}_Mirror", check if animName ends with "_Mirror"
-    // and the base name (without suffix) also exists in inventory.
-    integer r;
-    for (r = 0; r < llGetListLength(g_mirrorRules); r++)
-    {
-        string rule = llList2String(g_mirrorRules, r);
-        integer idx = llSubStringIndex(rule, "{name}");
-        if (idx == -1) jump nextRule;
-
-        string prefix = "";
-        string suffix = "";
-        if (idx > 0)
-            prefix = llGetSubString(rule, 0, idx - 1);
-        integer endIdx = idx + 5;
-        if (endIdx < llStringLength(rule) - 1)
-            suffix = llGetSubString(rule, endIdx + 1, -1);
-
-        integer nameLen = llStringLength(animName);
-        integer prefLen = llStringLength(prefix);
-        integer sufLen = llStringLength(suffix);
-
-        // Check if animName starts with prefix and ends with suffix
-        if (prefLen + sufLen >= nameLen) jump nextRule;
-
-        integer prefMatch = TRUE;
-        if (prefLen > 0 && llGetSubString(animName, 0, prefLen - 1) != prefix)
-            prefMatch = FALSE;
-
-        integer sufMatch = TRUE;
-        if (sufLen > 0 && llGetSubString(animName, nameLen - sufLen, -1) != suffix)
-            sufMatch = FALSE;
-
-        if (prefMatch && sufMatch)
-        {
-            // Extract the base name and check if it exists
-            string baseName = llGetSubString(animName, prefLen, nameLen - sufLen - 1);
-            if (baseName != "" && llGetInventoryType(baseName) == INVENTORY_ANIMATION)
-                return TRUE;
-        }
-        @nextRule;
-    }
+    integer len = llStringLength(animName);
+    if (len > 7 && llGetSubString(animName, -7, -1) == "_Mirror") return TRUE;
+    if (len > 9 && llGetSubString(animName, -9, -1) == " (mirror)") return TRUE;
+    if (len > 4 && llGetSubString(animName, -4, -1) == " [M]") return TRUE;
+    if (len > 11 && llGetSubString(animName, -11, -1) == " (Mirrored)") return TRUE;
+    if (len > 7 && llGetSubString(animName, -7, -1) == " Mirror") return TRUE;
+    if (len > 11 && llGetSubString(animName, -11, -1) == " [Mirrored]") return TRUE;
     return FALSE;
+}
+
+// Start async read of a notecard into the playlist
+startReadNotecard(string name)
+{
+    if (llGetInventoryType(name) != INVENTORY_NOTECARD)
+    {
+        llOwnerSay("Notecard '" + name + "' not found in inventory");
+        return;
+    }
+    g_ncName = name;
+    g_ncLine = 0;
+    g_playlist = [];
+    g_playDurations = [];
+    g_playIdx = 0;
+    g_ncReqId = llGetNotecardLine(name, 0);
 }
 
 // Load original (non-mirror) animation names from prim inventory into playlist
 loadPlaylistFromInventory()
 {
     g_playlist = [];
+    g_playDurations = [];
     integer count = llGetInventoryNumber(INVENTORY_ANIMATION);
     integer i;
-    integer skipped = 0;
     for (i = 0; i < count; i++)
     {
         string name = llGetInventoryName(INVENTORY_ANIMATION, i);
-        if (isMirrorName(name))
-            skipped++;
-        else
+        if (!isMirrorName(name))
             g_playlist += [name];
     }
     g_playIdx = 0;
-    llOwnerSay("Loaded " + (string)llGetListLength(g_playlist) + " animations ("
-        + (string)skipped + " mirror variants skipped)");
 }
 
 // ============================================================================
@@ -507,7 +513,7 @@ default
         g_urlReqId = llRequestURL();
 
         updateHovertext();
-        llOwnerSay("Mirror Sync Dance Controller v1.2 starting...");
+        llOwnerSay("Mirror Sync Dance Controller v1.7 ready");
     }
 
     // ========================================================================
@@ -522,14 +528,10 @@ default
             if (method == URL_REQUEST_GRANTED)
             {
                 g_url = body;
-                llOwnerSay("=== Mirror Sync Dance Controller Ready ===");
-                llOwnerSay("Paste this URL into mirror-sync.html:");
-                llOwnerSay(g_url);
+                llOwnerSay("URL: " + g_url);
             }
             else
-            {
-                llOwnerSay("ERROR: Could not get HTTP URL. Try resetting the script.");
-            }
+                llOwnerSay("ERROR: Could not get HTTP URL. Try resetting.");
             updateHovertext();
             return;
         }
@@ -560,11 +562,9 @@ default
         {
             list parts = llParseString2List(body, ["|"], []);
             key av = (key)llList2String(parts, 1);
-            string groupStr = llList2String(parts, 2);
             integer group = 1;
-            if (groupStr == "B") group = 2;
+            if (llList2String(parts, 2) == "B") group = 2;
 
-            // Check if already assigned
             if (findSlotByAvatar(av) > 0)
             {
                 llHTTPResponse(id, 200, "Already assigned");
@@ -591,15 +591,11 @@ default
         {
             list parts = llParseString2List(body, ["|"], []);
             integer slotNum = (integer)llList2String(parts, 1);
-            string groupStr = llList2String(parts, 2);
             integer group = 1;
-            if (groupStr == "B") group = 2;
+            if (llList2String(parts, 2) == "B") group = 2;
 
             if (slotNum >= 1 && slotNum <= MAX_SLOTS)
-            {
                 g_slotGroups = llListReplaceList(g_slotGroups, [group], slotNum - 1, slotNum - 1);
-                llOwnerSay("Slot " + (string)slotNum + " moved to Group " + groupStr);
-            }
             llHTTPResponse(id, 200, "Group set");
             updateHovertext();
             return;
@@ -608,22 +604,69 @@ default
         // --- MIRROR|rule1;;rule2;;... ---
         if (llSubStringIndex(body, "MIRROR|") == 0)
         {
-            string rulesStr = llGetSubString(body, 7, -1);
-            g_mirrorRules = llParseString2List(rulesStr, [RULE_SEP], []);
+            g_mirrorRules = llParseString2List(llGetSubString(body, 7, -1), [RULE_SEP], []);
             saveMirrorRules();
-            llHTTPResponse(id, 200, "Mirror rules set: " + rulesStr);
-            llOwnerSay("Mirror rules: " + llDumpList2String(g_mirrorRules, " | "));
+            llHTTPResponse(id, 200, "OK");
             updateHovertext();
             return;
         }
 
-        // --- PLAYLIST|anim1|anim2|... ---
+        // --- PLAYLIST|name1:dur1|name2:dur2|... (duration optional) ---
         if (llSubStringIndex(body, "PLAYLIST|") == 0)
         {
-            g_playlist = llParseString2List(llGetSubString(body, 9, -1), ["|"], []);
+            list parts = llParseString2List(llGetSubString(body, 9, -1), ["|"], []);
+            g_playlist = [];
+            g_playDurations = [];
+            integer p;
+            for (p = 0; p < llGetListLength(parts); p++)
+            {
+                string entry = llList2String(parts, p);
+                integer colonIdx = llSubStringIndex(entry, ":");
+                if (colonIdx > 0)
+                {
+                    g_playlist += [llGetSubString(entry, 0, colonIdx - 1)];
+                    g_playDurations += [(float)llGetSubString(entry, colonIdx + 1, -1)];
+                }
+                else
+                {
+                    g_playlist += [entry];
+                    g_playDurations += [0.0];
+                }
+            }
             g_playIdx = 0;
-            llHTTPResponse(id, 200, "Playlist loaded: " + (string)llGetListLength(g_playlist) + " dances");
-            llOwnerSay("Playlist loaded: " + (string)llGetListLength(g_playlist) + " dances");
+            llHTTPResponse(id, 200, "Playlist: " + (string)llGetListLength(g_playlist));
+            updateHovertext();
+            return;
+        }
+
+        // --- LOADNOTE|notecardName ---
+        if (llSubStringIndex(body, "LOADNOTE|") == 0)
+        {
+            startReadNotecard(llGetSubString(body, 9, -1));
+            llHTTPResponse(id, 200, "Loading notecard");
+            return;
+        }
+
+        // --- AUTOPLAY|ON or AUTOPLAY|OFF ---
+        if (llSubStringIndex(body, "AUTOPLAY|") == 0)
+        {
+            string mode = llGetSubString(body, 9, -1);
+            if (mode == "ON")
+            {
+                g_autoAdvance = TRUE;
+                if (g_playing && llGetListLength(g_playDurations) > g_playIdx)
+                {
+                    float dur = llList2Float(g_playDurations, g_playIdx);
+                    if (dur > 0.0) llSetTimerEvent(dur);
+                }
+                llHTTPResponse(id, 200, "Auto ON");
+            }
+            else
+            {
+                g_autoAdvance = FALSE;
+                if (!g_playing) llSetTimerEvent(0.0);
+                llHTTPResponse(id, 200, "Auto OFF");
+            }
             updateHovertext();
             return;
         }
@@ -671,10 +714,11 @@ default
                     releaseSlot(i + 1);
             }
             g_playlist = [];
+            g_playDurations = [];
             g_playIdx = 0;
             g_currentAnim = "";
-            llHTTPResponse(id, 200, "Reset complete");
-            llOwnerSay("Full reset complete");
+            g_autoAdvance = FALSE;
+            llHTTPResponse(id, 200, "Reset");
             updateHovertext();
             return;
         }
@@ -689,7 +733,42 @@ default
     touch_start(integer total)
     {
         key user = llDetectedKey(0);
-        showMainMenu(user);
+
+        // Owner always gets the full control menu
+        if (user == llGetOwner())
+        {
+            showMainMenu(user);
+            return;
+        }
+
+        // Non-owner already dancing — offer to leave
+        integer existingSlot = findSlotByAvatar(user);
+        if (existingSlot > 0)
+        {
+            g_menuContext = "leave";
+            openMenu(user, "You're already dancing!\nTouch Leave to stop and leave the dance.", ["Leave", "Stay"]);
+            return;
+        }
+
+        // Non-owner, not assigned — auto-join if slots available
+        integer slot = findEmptySlot();
+        if (slot == 0)
+        {
+            llRegionSayTo(user, 0, "Sorry, all dance slots are full!");
+            return;
+        }
+
+        // Auto-assign to the group with fewer members
+        integer group;
+        if (countGroup(1) <= countGroup(2))
+            group = 1;
+        else
+            group = 2;
+
+        assignAvatar(user, group);
+        llRegionSayTo(user, 0, "Welcome! You've been added to Group "
+            + llList2String(["?", "A", "B"], group)
+            + ". Please accept the animation permission to start dancing!");
     }
 
     // ========================================================================
@@ -704,16 +783,13 @@ default
         for (i = 0; i < num && i < 16; i++)
         {
             key av = llDetectedKey(i);
-            // Skip avatars already assigned
             if (findSlotByAvatar(av) == 0)
             {
                 g_scannedKeys += [av];
                 g_scannedNames += [llDetectedName(i)];
             }
         }
-        llOwnerSay("Scan found " + (string)llGetListLength(g_scannedKeys) + " available avatars");
 
-        // If menu is in scan context, refresh it
         if (g_menuContext == "scan" && g_menuUser != NULL_KEY)
             showScanMenu(g_menuUser);
     }
@@ -722,7 +798,6 @@ default
     {
         g_scannedKeys = [];
         g_scannedNames = [];
-        llOwnerSay("Scan: no avatars found nearby");
     }
 
     // ========================================================================
@@ -765,8 +840,22 @@ default
                 advancePlaylist(-1);
                 showMainMenu(id);
             }
-            else if (message == "Mirror Rule")
-                showMirrorRuleMenu(id);
+            else if (message == "Auto: ON")
+            {
+                g_autoAdvance = TRUE;
+                if (g_playing && llGetListLength(g_playDurations) > g_playIdx)
+                {
+                    float dur = llList2Float(g_playDurations, g_playIdx);
+                    if (dur > 0.0) llSetTimerEvent(dur);
+                }
+                showMainMenu(id);
+            }
+            else if (message == "Auto: OFF")
+            {
+                g_autoAdvance = FALSE;
+                llSetTimerEvent(0.0);
+                showMainMenu(id);
+            }
             else if (message == "Reset")
             {
                 stopAllAnims();
@@ -777,8 +866,10 @@ default
                         releaseSlot(i + 1);
                 }
                 g_playlist = [];
+                g_playDurations = [];
                 g_playIdx = 0;
                 g_currentAnim = "";
+                g_autoAdvance = FALSE;
                 updateHovertext();
                 showMainMenu(id);
             }
@@ -810,7 +901,6 @@ default
                 if (sName == message)
                 {
                     key av = llList2Key(g_scannedKeys, i);
-                    // Auto-assign to the group with fewer members
                     integer group;
                     if (countGroup(1) <= countGroup(2))
                         group = 1;
@@ -818,7 +908,6 @@ default
                         group = 2;
 
                     assignAvatar(av, group);
-                    // Remove from scan list
                     g_scannedKeys = llDeleteSubList(g_scannedKeys, i, i);
                     g_scannedNames = llDeleteSubList(g_scannedNames, i, i);
                     updateHovertext();
@@ -840,7 +929,6 @@ default
             }
             if (message == "Auto Assign")
             {
-                // Alternate existing avatars between A and B
                 integer toggle = 1;
                 integer i;
                 for (i = 0; i < MAX_SLOTS; i++)
@@ -852,7 +940,6 @@ default
                         else toggle = 1;
                     }
                 }
-                llOwnerSay("Auto-assigned avatars alternating A/B");
                 updateHovertext();
                 showGroupMenu(id);
                 return;
@@ -872,7 +959,6 @@ default
             }
             if (message == "Swap Slot")
             {
-                // Show numbered slots to swap
                 g_menuContext = "swap";
                 list buttons = [];
                 integer i;
@@ -896,7 +982,7 @@ default
                 for (i = 0; i < MAX_SLOTS; i++)
                 {
                     if (llList2Key(g_slotAvatars, i) != NULL_KEY)
-                        buttons += [(string)(i+1) + " " + llList2String(g_slotNames, i)];
+                        buttons += [(string)(i+1) + " " + llKey2Name(llList2Key(g_slotAvatars, i))];
                 }
                 buttons += ["Back"];
                 openMenu(id, "Select slot to remove:", buttons);
@@ -921,7 +1007,6 @@ default
                 if (curGroup == 1) newGroup = 2;
                 else newGroup = 1;
                 g_slotGroups = llListReplaceList(g_slotGroups, [newGroup], slotNum - 1, slotNum - 1);
-                llOwnerSay("Slot " + (string)slotNum + " moved to Group " + llList2String(["?", "A", "B"], newGroup));
                 updateHovertext();
             }
             showGroupMenu(id);
@@ -946,6 +1031,22 @@ default
             return;
         }
 
+        // --- Leave Menu (non-owner dancers) ---
+        if (g_menuContext == "leave")
+        {
+            if (message == "Leave")
+            {
+                integer slotNum = findSlotByAvatar(id);
+                if (slotNum > 0)
+                {
+                    releaseSlot(slotNum);
+                    llRegionSayTo(id, 0, "You've left the dance. Touch again to rejoin!");
+                    updateHovertext();
+                }
+            }
+            return;
+        }
+
         // --- Playlist Menu ---
         if (g_menuContext == "playlist")
         {
@@ -961,11 +1062,16 @@ default
                 showPlaylistMenu(id);
                 return;
             }
+            if (message == "Notecards")
+            {
+                showNotecardMenu(id);
+                return;
+            }
             if (message == "Clear List")
             {
                 g_playlist = [];
+                g_playDurations = [];
                 g_playIdx = 0;
-                llOwnerSay("Playlist cleared");
                 updateHovertext();
                 showPlaylistMenu(id);
                 return;
@@ -973,41 +1079,30 @@ default
             return;
         }
 
-        // --- Mirror Rule Menu ---
-        if (g_menuContext == "mirrorrule")
+        // --- Notecards submenu ---
+        if (g_menuContext == "notecards")
         {
             if (message == "Back")
             {
-                showMainMenu(id);
+                showPlaylistMenu(id);
                 return;
             }
-            if (message == "Clear Rules")
+            integer nc;
+            integer ncCount = llGetInventoryNumber(INVENTORY_NOTECARD);
+            for (nc = 0; nc < ncCount; nc++)
             {
-                g_mirrorRules = ["{name}_Mirror"];
-                saveMirrorRules();
-                llOwnerSay("Mirror rules reset to default");
-                updateHovertext();
-                showMirrorRuleMenu(id);
-                return;
+                string ncName = llGetInventoryName(INVENTORY_NOTECARD, nc);
+                string truncated = ncName;
+                if (llStringLength(truncated) > 24)
+                    truncated = llGetSubString(truncated, 0, 23);
+                if (truncated == message)
+                {
+                    startReadNotecard(ncName);
+                    showPlaylistMenu(id);
+                    return;
+                }
             }
-            // Toggle: if rule already in list, remove it; otherwise add it
-            integer rIdx = llListFindList(g_mirrorRules, [message]);
-            if (rIdx != -1)
-            {
-                if (llGetListLength(g_mirrorRules) > 1)
-                    g_mirrorRules = llDeleteSubList(g_mirrorRules, rIdx, rIdx);
-                else
-                    llOwnerSay("Cannot remove last rule");
-            }
-            else
-            {
-                g_mirrorRules += [message];
-            }
-            saveMirrorRules();
-            llOwnerSay("Mirror rules: " + llDumpList2String(g_mirrorRules, " | ")
-                + "\nExample: dance1 -> " + getMirrorName("dance1"));
-            updateHovertext();
-            showMirrorRuleMenu(id);
+            showPlaylistMenu(id);
             return;
         }
     }
@@ -1023,7 +1118,6 @@ default
             if (num >= 1 && num <= MAX_SLOTS)
             {
                 g_slotPerms = llListReplaceList(g_slotPerms, [1], num - 1, num - 1);
-                llOwnerSay("Slot " + (string)num + " permissions confirmed for " + llKey2Name(id));
                 updateHovertext();
 
                 // If already playing, start this avatar's animation too
@@ -1043,7 +1137,6 @@ default
         {
             if (num >= 1 && num <= MAX_SLOTS)
             {
-                llOwnerSay("Slot " + (string)num + " permission denied — releasing");
                 releaseSlot(num);
                 updateHovertext();
             }
@@ -1051,18 +1144,70 @@ default
     }
 
     // ========================================================================
-    // TIMER — menu timeout
+    // DATASERVER — notecard reading
+    // ========================================================================
+
+    dataserver(key id, string data)
+    {
+        if (id != g_ncReqId) return;
+
+        if (data == EOF)
+        {
+            llOwnerSay("Loaded " + g_ncName + ": " + (string)llGetListLength(g_playlist) + " dances");
+            g_ncName = "";
+            updateHovertext();
+
+            if (g_menuContext == "notecards" && g_menuUser != NULL_KEY)
+                showPlaylistMenu(g_menuUser);
+            return;
+        }
+
+        // Process line: trim, skip empty/comments/mirror names
+        // Supports name:duration format (e.g. "Bento Cabaret 1:32.6")
+        string trimmed = llStringTrim(data, STRING_TRIM);
+        if (trimmed != "" && llGetSubString(trimmed, 0, 0) != "#")
+        {
+            string animName = trimmed;
+            float dur = 0.0;
+            integer colonIdx = llSubStringIndex(trimmed, ":");
+            if (colonIdx > 0)
+            {
+                animName = llGetSubString(trimmed, 0, colonIdx - 1);
+                dur = (float)llGetSubString(trimmed, colonIdx + 1, -1);
+            }
+            if (!isMirrorName(animName))
+            {
+                g_playlist += [animName];
+                g_playDurations += [dur];
+            }
+        }
+
+        g_ncLine++;
+        g_ncReqId = llGetNotecardLine(g_ncName, g_ncLine);
+    }
+
+    // ========================================================================
+    // TIMER — menu timeout / auto-advance
     // ========================================================================
 
     timer()
     {
-        llSetTimerEvent(0.0);
-        if (g_menuHandle)
+        if (g_playing && g_autoAdvance)
         {
-            llListenRemove(g_menuHandle);
-            g_menuHandle = 0;
+            advancePlaylist(1);
         }
-        g_menuContext = "";
+        else
+        {
+            llSetTimerEvent(0.0);
+            if (g_menuHandle)
+            {
+                llListenRemove(g_menuHandle);
+                g_menuHandle = 0;
+            }
+            g_menuContext = "";
+            g_scannedKeys = [];
+            g_scannedNames = [];
+        }
     }
 
     // ========================================================================
@@ -1080,7 +1225,6 @@ default
         {
             llSetText("Mirror Sync Dance\nRequesting new URL...", <1, 1, 0>, 1.0);
             g_urlReqId = llRequestURL();
-            llOwnerSay("Region change detected, requesting new URL...");
         }
     }
 }

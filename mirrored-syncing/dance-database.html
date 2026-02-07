@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Database Manager</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a1a; color: #eee; height: 100vh; display: flex; flex-direction: column; }
+
+        /* === TOOLBAR === */
+        #toolbar { background: #222; border-bottom: 1px solid #444; padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; }
+        #toolbar h1 { font-size: 14px; font-weight: 600; color: #ccc; }
+        #toolbar .actions { display: flex; gap: 6px; }
+
+        /* === BUTTONS === */
+        button { background: #333; color: #ddd; border: 1px solid #555; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        button:hover { background: #444; }
+        .btn-primary { background: #2a5a8a; border-color: #3a7aba; }
+        .btn-primary:hover { background: #3a6a9a; }
+        .btn-danger { background: #6a2a2a; border-color: #8a3a3a; }
+        .btn-danger:hover { background: #7a3a3a; }
+        .btn-success { background: #2a6a2a; border-color: #3a8a3a; }
+        .btn-success:hover { background: #3a7a3a; }
+        .btn-small { padding: 3px 8px; font-size: 11px; }
+        .btn-active { background: #3a7aba; border-color: #5a9ada; color: #fff; }
+
+        /* === INPUTS === */
+        input[type="text"], input[type="number"], select, textarea {
+            background: #2a2a2a; color: #eee; border: 1px solid #555; padding: 5px 8px;
+            border-radius: 3px; font-size: 12px; font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #48f; }
+
+        /* === MAIN LAYOUT === */
+        #main { flex: 1; display: flex; overflow: hidden; }
+
+        /* === PANELS === */
+        .panel { flex: 1; display: flex; flex-direction: column; padding: 12px; overflow: hidden; }
+        .panel-left { border-right: 1px solid #444; min-width: 350px; }
+        .panel-right { min-width: 350px; }
+        .panel h2 { font-size: 13px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+        .panel-header h2 { margin-bottom: 0; }
+
+        /* === FILTER ROW === */
+        .filter-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+        .filter-row input[type="text"] { flex: 1; }
+        .filter-row select { min-width: 120px; }
+
+        /* === DATABASE TABLE === */
+        .db-table-wrap { flex: 1; overflow-y: auto; border: 1px solid #333; border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #2a2a2a; color: #aaa; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;
+             padding: 6px 8px; text-align: left; border-bottom: 1px solid #444; position: sticky; top: 0; cursor: pointer; user-select: none; }
+        th:hover { color: #eee; }
+        th .sort-arrow { font-size: 8px; margin-left: 3px; }
+        td { padding: 4px 8px; border-bottom: 1px solid #2a2a2a; }
+        tr:hover { background: #252535; }
+        tr.selected { background: #2a3a4a; }
+
+        /* === EDITABLE CELLS === */
+        td.editable { cursor: pointer; }
+        td.editable:hover { background: #333348; }
+        td .edit-input { width: 100%; background: #111; border: 1px solid #48f; padding: 2px 4px; color: #eee; font-size: 12px; border-radius: 2px; }
+
+        /* === TAG PILLS === */
+        .tag-pill { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 9px; white-space: nowrap; cursor: default; margin: 1px; }
+        .tag-pill .tag-x { cursor: pointer; margin-left: 2px; opacity: 0.6; }
+        .tag-pill .tag-x:hover { opacity: 1; }
+
+        /* === ADD ROW === */
+        .add-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+        .add-row input { flex: 1; min-width: 80px; }
+
+        /* === INFO BAR === */
+        .info-bar { font-size: 10px; color: #888; margin-top: 4px; display: flex; justify-content: space-between; }
+
+        /* === PLAYLIST PANEL === */
+        .pl-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .pl-bar select { min-width: 150px; }
+        .pl-bar .bar-label { font-size: 11px; color: #888; }
+        .pl-name-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+        .pl-name-row input { flex: 1; }
+
+        .pl-table-wrap { flex: 1; overflow-y: auto; border: 1px solid #333; border-radius: 3px; }
+        #plBody tr { cursor: grab; }
+        #plBody tr.dragging { opacity: 0.4; }
+        #plBody tr.drop-above td { border-top: 2px solid #48f; }
+        #plBody tr.drop-below td { border-bottom: 2px solid #48f; }
+
+        .pl-total { font-size: 11px; color: #aaa; margin-top: 6px; text-align: right; }
+        .pl-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+        /* === SEND TO SL === */
+        .sl-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #333; }
+        .sl-row input { flex: 1; }
+
+        /* === MODAL === */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #2a2a2a; border: 1px solid #555; border-radius: 6px; padding: 20px; width: 560px; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { margin-bottom: 12px; font-size: 14px; color: #eee; }
+        .modal textarea { width: 100%; height: 240px; background: #111; color: #eee; border: 1px solid #555; padding: 8px;
+                          font-family: 'Consolas', monospace; font-size: 11px; border-radius: 2px; resize: vertical; }
+        .modal .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+        .modal .import-preview { margin-top: 8px; font-size: 11px; color: #888; max-height: 100px; overflow-y: auto; }
+
+        /* === LOCATION BADGES === */
+        .loc-badges { display: inline-flex; gap: 2px; }
+        .loc-badge { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 9px; cursor: pointer; user-select: none; opacity: 0.3; border: 1px solid transparent; }
+        .loc-badge.active { opacity: 1; }
+        .loc-badge.loc-prim { background: #1a4a2a; color: #4c8; border-color: #2a6a3a; }
+        .loc-badge.loc-prim.active { background: #2a6a3a; }
+        .loc-badge.loc-inventory { background: #3a3a1a; color: #cc8; border-color: #5a5a2a; }
+        .loc-badge.loc-inventory.active { background: #4a4a2a; }
+        .loc-badge.loc-notecard { background: #1a2a4a; color: #8ac; border-color: #2a3a6a; }
+        .loc-badge.loc-notecard.active { background: #2a3a5a; }
+        .loc-warn { color: #f84; font-size: 10px; }
+
+        /* === STATUS BAR === */
+        #statusBar { background: #222; border-top: 1px solid #444; padding: 4px 15px; font-size: 10px; color: #888; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+    <h1>Dance Database Manager v1.6</h1>
+    <div class="actions">
+        <button onclick="openBulkImport()">Bulk Import</button>
+        <button onclick="openCsvImport()">CSV Import</button>
+        <button onclick="exportProject()">Export All</button>
+        <button onclick="importProject()">Import All</button>
+    </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="main">
+
+    <!-- LEFT: ANIMATION DATABASE -->
+    <div class="panel panel-left">
+        <div class="panel-header">
+            <h2>Animation Database</h2>
+        </div>
+
+        <div class="filter-row">
+            <input type="text" id="dbSearch" placeholder="Search animations..." oninput="renderDatabase()">
+            <select id="dbTagFilter" onchange="renderDatabase()">
+                <option value="">All tags</option>
+            </select>
+            <select id="dbLocFilter" onchange="renderDatabase()">
+                <option value="">All locations</option>
+                <option value="prim">In Prim</option>
+                <option value="inventory">In Inventory</option>
+                <option value="notecard">In Notecard</option>
+                <option value="none">No location</option>
+            </select>
+        </div>
+
+        <div class="db-table-wrap">
+            <table id="dbTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortDatabase('name')" style="width:35%;">Name <span class="sort-arrow" id="sortName"></span></th>
+                        <th onclick="sortDatabase('duration')" style="width:10%;">Dur(s) <span class="sort-arrow" id="sortDuration"></span></th>
+                        <th style="width:18%;">Location</th>
+                        <th onclick="sortDatabase('tags')" style="width:24%;">Tags <span class="sort-arrow" id="sortTags"></span></th>
+                        <th style="width:13%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="dbBody"></tbody>
+            </table>
+        </div>
+
+        <div class="info-bar">
+            <span id="dbCount">0 animations</span>
+            <span id="dbTagCount">0 sets</span>
+        </div>
+
+        <div class="add-row">
+            <input type="text" id="addName" placeholder="Animation name">
+            <input type="number" id="addDur" placeholder="Dur" style="width:60px;" min="1" step="0.01" value="30">
+            <input type="text" id="addTag" placeholder="Tag" style="max-width:100px;">
+            <button class="btn-primary btn-small" onclick="addAnimation()">Add</button>
+        </div>
+        <div class="add-row" style="margin-top:4px;">
+            <span style="font-size:10px; color:#888;">Mark filtered as:</span>
+            <button class="btn-small" onclick="bulkSetLocation('prim')" style="background:#1a4a2a;border-color:#2a6a3a;color:#4c8;">Prim</button>
+            <button class="btn-small" onclick="bulkSetLocation('inventory')" style="background:#3a3a1a;border-color:#5a5a2a;color:#cc8;">Inventory</button>
+            <button class="btn-small" onclick="bulkSetLocation('notecard')" style="background:#1a2a4a;border-color:#2a3a6a;color:#8ac;">Notecard</button>
+            <button class="btn-small" onclick="bulkClearLocation()">Clear Loc.</button>
+        </div>
+    </div>
+
+    <!-- RIGHT: PLAYLIST BUILDER -->
+    <div class="panel panel-right">
+        <div class="panel-header">
+            <h2>Playlist Builder</h2>
+        </div>
+
+        <div class="pl-bar">
+            <span class="bar-label">Saved:</span>
+            <select id="plSelect" onchange="onPlaylistSelect()">
+                <option value="">-- Select --</option>
+            </select>
+            <button class="btn-small" onclick="loadPlaylist()">Load</button>
+            <button class="btn-small btn-primary" onclick="newPlaylist()">New</button>
+            <button class="btn-small btn-danger" onclick="deletePlaylist()">Delete</button>
+        </div>
+
+        <div class="pl-name-row">
+            <span class="bar-label">Name:</span>
+            <input type="text" id="plName" placeholder="Playlist name">
+            <button class="btn-small btn-primary" onclick="savePlaylist()">Save</button>
+        </div>
+
+        <div class="pl-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:8%;">#</th>
+                        <th style="width:52%;">Name</th>
+                        <th style="width:18%;">Dur(s)</th>
+                        <th style="width:22%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="plBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pl-total" id="plTotal">Empty playlist</div>
+
+        <div class="pl-actions">
+            <button class="btn-small" onclick="addAllFilteredToPlaylist()">Add All Filtered</button>
+            <button class="btn-small btn-danger" onclick="clearCurrentPlaylist()">Clear</button>
+            <button class="btn-small" onclick="exportPlaylistJson()">Export JSON</button>
+            <button class="btn-small" onclick="importPlaylistJson()">Import JSON</button>
+            <button class="btn-small" onclick="exportPlaylistNotecard()">Export Notecard</button>
+        </div>
+
+        <div class="sl-row">
+            <span class="bar-label">SL URL:</span>
+            <input type="text" id="slUrl" placeholder="Paste controller HTTP-in URL">
+            <button class="btn-small btn-success" onclick="sendToSL()">Send to SL</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusBar">
+    <span id="statusMsg">Ready</span>
+    <span>Shared storage with mirror-sync.html</span>
+</div>
+
+<!-- BULK IMPORT MODAL -->
+<div class="modal-overlay" id="bulkImportModal">
+    <div class="modal">
+        <h3>Bulk Import Animations</h3>
+        <div style="font-size:11px; color:#888; margin-bottom:8px;">
+            Paste playlist text below. Lines starting with <code>=== Tag Name (N dances) ===</code> set the tag for animations that follow.
+            Lines starting with <code>#</code> are ignored.
+        </div>
+        <textarea id="bulkImportText" placeholder="=== Bento Cabaret (16 dances) ===
+Bento Cabaret 1
+Bento Cabaret 2
+..." oninput="previewBulkImport()"></textarea>
+        <div class="import-preview" id="bulkImportPreview"></div>
+        <div class="modal-actions">
+            <button onclick="closeBulkImport()">Cancel</button>
+            <button class="btn-primary" onclick="executeBulkImport()">Import</button>
+        </div>
+    </div>
+</div>
+
+<!-- CSV IMPORT MODAL -->
+<div class="modal-overlay" id="csvImportModal">
+    <div class="modal">
+        <h3>CSV Import (Batch Duration Entry)</h3>
+        <div style="font-size:11px; color:#888; margin-bottom:8px;">
+            Paste lines in format: <code>name, duration, tag</code> (duration and tag are optional).<br>
+            Duration in seconds (decimals OK). Lines with a name but no duration are treated as <b>category tags</b>
+            for the entries below them. Mirror-named animations are auto-skipped.
+        </div>
+        <textarea id="csvImportText" placeholder="Bento Cabaret
+Bento Cabaret 1, 32.6
+Bento Cabaret 2, 31.3
+Dakota_BurlesqueDance01_PARAGON, 28.05
+..." oninput="previewCsvImport()"></textarea>
+        <div class="import-preview" id="csvImportPreview"></div>
+        <div class="modal-actions">
+            <button onclick="closeCsvImport()">Cancel</button>
+            <button class="btn-primary" onclick="executeCsvImport()">Import</button>
+        </div>
+    </div>
+</div>
+
+<!-- NOTECARD EXPORT MODAL -->
+<div class="modal-overlay" id="notecardModal">
+    <div class="modal">
+        <h3>Notecard Export</h3>
+        <div style="font-size:11px; color:#888; margin-bottom:8px;">
+            Copy this text into a Second Life notecard. One animation per line.
+        </div>
+        <textarea id="notecardText" readonly style="height:300px;"></textarea>
+        <div class="modal-actions">
+            <button onclick="copyNotecard()">Copy to Clipboard</button>
+            <button onclick="closeNotecardModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================================
+// STATE
+// ============================================================================
+
+const STORAGE_KEY = 'mirrorSyncProject';
+
+let state = {
+    version: 3,
+    controllerUrl: '',
+    mirrorRules: ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'],
+    slots: [],
+    playlist: [],
+    playIdx: 0,
+    playing: false,
+    scannedAvatars: [],
+    library: [],
+    savedPlaylists: [],
+    libraryFilterTag: '',
+    librarySearchText: ''
+};
+
+// Current editing state (local to this page)
+let currentPlaylist = [];       // working playlist items [{name, duration}]
+let currentPlaylistId = '';     // ID of loaded saved playlist ('' = unsaved)
+let sortCol = 'name';
+let sortDir = 1; // 1 = asc, -1 = desc
+let dragIdx = -1; // playlist drag index
+
+// ============================================================================
+// PERSISTENCE (shared with mirror-sync.html)
+// ============================================================================
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        state.version = 3;
+        state.controllerUrl = data.controllerUrl || '';
+        state.mirrorRules = data.mirrorRules || state.mirrorRules;
+        state.slots = data.slots || [];
+        state.playlist = data.playlist || [];
+        state.playIdx = data.playIdx || 0;
+        state.playing = data.playing || false;
+        state.scannedAvatars = data.scannedAvatars || [];
+        state.library = data.library || [];
+        // Migrate: ensure all library items have a locations array
+        state.library.forEach(item => {
+            if (!Array.isArray(item.locations)) item.locations = [];
+        });
+        state.savedPlaylists = data.savedPlaylists || [];
+    } catch (e) { /* ignore */ }
+}
+
+function saveState() {
+    try {
+        const data = {
+            version: state.version,
+            controllerUrl: state.controllerUrl,
+            mirrorRules: state.mirrorRules,
+            slots: state.slots,
+            playlist: state.playlist,
+            playIdx: state.playIdx,
+            scannedAvatars: state.scannedAvatars,
+            library: state.library,
+            savedPlaylists: state.savedPlaylists
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* storage full */ }
+}
+
+// ============================================================================
+// UTILITY
+// ============================================================================
+
+function escHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function escAttr(str) {
+    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
+}
+
+function tagColor(tag) {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) hash = ((hash << 5) - hash) + tag.charCodeAt(i);
+    return 'hsl(' + (Math.abs(hash) % 360) + ', 35%, 28%)';
+}
+
+function tagTextColor(tag) {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) hash = ((hash << 5) - hash) + tag.charCodeAt(i);
+    return 'hsl(' + (Math.abs(hash) % 360) + ', 55%, 72%)';
+}
+
+function formatDuration(totalSecs) {
+    const secs = Math.round(totalSecs || 0);
+    if (secs <= 0) return '0s';
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    if (m === 0) return s + 's';
+    return m + 'm ' + s + 's';
+}
+
+function parseDuration(value, fallback) {
+    const n = parseFloat(value);
+    if (!isFinite(n) || n <= 0) return fallback;
+    // Keep two decimals max (CSV data uses hundredths)
+    return Math.round(n * 100) / 100;
+}
+
+function setStatus(msg) {
+    document.getElementById('statusMsg').textContent = msg;
+}
+
+function getUniqueTags() {
+    const tags = new Set();
+    state.library.forEach(item => item.tags.forEach(t => tags.add(t)));
+    return [...tags].sort();
+}
+
+// ============================================================================
+// DATABASE — RENDERING
+// ============================================================================
+
+function getFilteredLibrary() {
+    const search = document.getElementById('dbSearch').value.toLowerCase();
+    const tag = document.getElementById('dbTagFilter').value;
+    const loc = document.getElementById('dbLocFilter').value;
+    let items = state.library;
+    if (tag) items = items.filter(item => item.tags.includes(tag));
+    if (search) items = items.filter(item => item.name.toLowerCase().includes(search));
+    if (loc === 'none') items = items.filter(item => !item.locations || item.locations.length === 0);
+    else if (loc) items = items.filter(item => item.locations && item.locations.includes(loc));
+
+    // Sort
+    items = [...items].sort((a, b) => {
+        let va, vb;
+        if (sortCol === 'name') { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
+        else if (sortCol === 'duration') { va = a.duration || 0; vb = b.duration || 0; }
+        else if (sortCol === 'tags') { va = a.tags.join(','); vb = b.tags.join(','); }
+        else { va = a.name; vb = b.name; }
+        if (va < vb) return -sortDir;
+        if (va > vb) return sortDir;
+        return 0;
+    });
+    return items;
+}
+
+function renderTagFilter() {
+    const select = document.getElementById('dbTagFilter');
+    const tags = getUniqueTags();
+    const current = select.value;
+    select.innerHTML = '<option value="">All tags (' + state.library.length + ')</option>' +
+        tags.map(t => {
+            const count = state.library.filter(item => item.tags.includes(t)).length;
+            return '<option value="' + escAttr(t) + '"' + (t === current ? ' selected' : '') + '>' + escHtml(t) + ' (' + count + ')</option>';
+        }).join('');
+}
+
+function renderSortArrows() {
+    document.getElementById('sortName').textContent = sortCol === 'name' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
+    document.getElementById('sortDuration').textContent = sortCol === 'duration' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
+    document.getElementById('sortTags').textContent = sortCol === 'tags' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
+}
+
+function renderDatabase() {
+    const tbody = document.getElementById('dbBody');
+    const filtered = getFilteredLibrary();
+
+    document.getElementById('dbCount').textContent = filtered.length + ' / ' + state.library.length + ' animations';
+    document.getElementById('dbTagCount').textContent = getUniqueTags().length + ' sets';
+    renderSortArrows();
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#555; text-align:center; padding:20px;">No animations. Use Bulk Import or add below.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+        const tags = item.tags.map(t =>
+            '<span class="tag-pill" style="background:' + tagColor(t) + ';color:' + tagTextColor(t) + '">'
+            + escHtml(t) + '<span class="tag-x" onclick="event.stopPropagation(); removeTag(\'' + escAttr(item.id) + '\', \'' + escAttr(t) + '\')">&times;</span></span>'
+        ).join('');
+        const locs = item.locations || [];
+        const locBadges = '<div class="loc-badges">'
+            + '<span class="loc-badge loc-prim' + (locs.includes('prim') ? ' active' : '') + '" onclick="event.stopPropagation(); toggleLocation(\'' + escAttr(item.id) + '\', \'prim\')" title="In Prim">P</span>'
+            + '<span class="loc-badge loc-inventory' + (locs.includes('inventory') ? ' active' : '') + '" onclick="event.stopPropagation(); toggleLocation(\'' + escAttr(item.id) + '\', \'inventory\')" title="In Inventory">I</span>'
+            + '<span class="loc-badge loc-notecard' + (locs.includes('notecard') ? ' active' : '') + '" onclick="event.stopPropagation(); toggleLocation(\'' + escAttr(item.id) + '\', \'notecard\')" title="In Notecard">N</span>'
+            + '</div>';
+        return '<tr ondblclick="addToPlaylistFromDb(\'' + escAttr(item.id) + '\')">'
+            + '<td title="' + escAttr(item.name) + '">' + escHtml(item.name) + '</td>'
+            + '<td class="editable" onclick="editDuration(\'' + escAttr(item.id) + '\', this)">' + (item.duration || 30) + '</td>'
+            + '<td>' + locBadges + '</td>'
+            + '<td>' + tags + ' <span class="tag-pill" style="background:#333;color:#888;cursor:pointer;" onclick="promptAddTag(\'' + escAttr(item.id) + '\')">+</span></td>'
+            + '<td style="text-align:right;">'
+            + '<button class="btn-small btn-primary" onclick="addToPlaylistFromDb(\'' + escAttr(item.id) + '\')" title="Add to playlist">+</button> '
+            + '<button class="btn-small btn-danger" onclick="removeAnimation(\'' + escAttr(item.id) + '\')" title="Remove">&times;</button>'
+            + '</td></tr>';
+    }).join('');
+}
+
+function sortDatabase(col) {
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = 1; }
+    renderDatabase();
+}
+
+// ============================================================================
+// DATABASE — CRUD
+// ============================================================================
+
+function addAnimation() {
+    const nameInput = document.getElementById('addName');
+    const durInput = document.getElementById('addDur');
+    const tagInput = document.getElementById('addTag');
+    const name = nameInput.value.trim();
+    if (!name) return;
+
+    const dur = Math.max(1, parseDuration(durInput.value, 30));
+    const tag = tagInput.value.trim();
+
+    const existing = state.library.find(item => item.name === name);
+    if (existing) {
+        existing.duration = dur;
+        if (tag && !existing.tags.includes(tag)) existing.tags.push(tag);
+        setStatus('Updated "' + name + '"');
+    } else {
+        state.library.push({
+            id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            name: name,
+            tags: tag ? [tag] : [],
+            duration: dur,
+            locations: []
+        });
+        setStatus('Added "' + name + '"');
+    }
+
+    nameInput.value = '';
+    saveState();
+    renderDatabase();
+    renderTagFilter();
+}
+
+function removeAnimation(id) {
+    state.library = state.library.filter(item => item.id !== id);
+    saveState();
+    renderDatabase();
+    renderTagFilter();
+    setStatus('Animation removed');
+}
+
+function editDuration(id, td) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+
+    const current = item.duration || 30;
+    td.innerHTML = '<input type="number" class="edit-input" value="' + current + '" min="1" step="0.01" '
+        + 'onblur="saveDuration(\'' + escAttr(id) + '\', this.value)" '
+        + 'onkeydown="if(event.key===\'Enter\')this.blur(); if(event.key===\'Escape\'){this.value=' + current + ';this.blur();}">';
+    td.querySelector('input').focus();
+    td.querySelector('input').select();
+}
+
+function saveDuration(id, value) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    item.duration = Math.max(1, parseDuration(value, 30));
+    saveState();
+    renderDatabase();
+    setStatus('Duration updated: ' + item.name + ' = ' + item.duration + 's');
+}
+
+function removeTag(id, tag) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    item.tags = item.tags.filter(t => t !== tag);
+    saveState();
+    renderDatabase();
+    renderTagFilter();
+}
+
+function promptAddTag(id) {
+    const tag = prompt('Add tag:');
+    if (!tag || !tag.trim()) return;
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    if (!item.tags.includes(tag.trim())) {
+        item.tags.push(tag.trim());
+        saveState();
+        renderDatabase();
+        renderTagFilter();
+    }
+}
+
+// ============================================================================
+// LOCATION TRACKING
+// ============================================================================
+
+function toggleLocation(id, loc) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    if (!Array.isArray(item.locations)) item.locations = [];
+    const idx = item.locations.indexOf(loc);
+    if (idx >= 0) item.locations.splice(idx, 1);
+    else item.locations.push(loc);
+    saveState();
+    renderDatabase();
+}
+
+function bulkSetLocation(loc) {
+    const filtered = getFilteredLibrary();
+    if (filtered.length === 0) return;
+    let count = 0;
+    filtered.forEach(item => {
+        if (!Array.isArray(item.locations)) item.locations = [];
+        if (!item.locations.includes(loc)) { item.locations.push(loc); count++; }
+    });
+    saveState();
+    renderDatabase();
+    setStatus('Marked ' + count + ' animations as "' + loc + '"');
+}
+
+function bulkClearLocation() {
+    const filtered = getFilteredLibrary();
+    if (filtered.length === 0) return;
+    filtered.forEach(item => { item.locations = []; });
+    saveState();
+    renderDatabase();
+    setStatus('Cleared locations for ' + filtered.length + ' animations');
+}
+
+// ============================================================================
+// BULK IMPORT (playlists.txt format)
+// ============================================================================
+
+function openBulkImport() {
+    document.getElementById('bulkImportText').value = '';
+    document.getElementById('bulkImportPreview').innerHTML = '';
+    document.getElementById('bulkImportModal').classList.add('active');
+}
+
+function closeBulkImport() {
+    document.getElementById('bulkImportModal').classList.remove('active');
+}
+
+function parseBulkText(text) {
+    const lines = text.split('\n');
+    const result = [];
+    let currentTag = '';
+    const headerRegex = /^===\s*(.+?)\s*(?:\(\d+\s*dances?\))?\s*===$/;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const match = trimmed.match(headerRegex);
+        if (match) {
+            currentTag = match[1].trim();
+            continue;
+        }
+        result.push({ name: trimmed, tag: currentTag });
+    }
+    return result;
+}
+
+function previewBulkImport() {
+    const parsed = parseBulkText(document.getElementById('bulkImportText').value);
+    const preview = document.getElementById('bulkImportPreview');
+    if (parsed.length === 0) { preview.innerHTML = ''; return; }
+    const tags = {};
+    parsed.forEach(p => { const t = p.tag || '(no tag)'; tags[t] = (tags[t] || 0) + 1; });
+    preview.innerHTML = 'Found <b>' + parsed.length + '</b> animations in <b>' + Object.keys(tags).length + '</b> sets: '
+        + Object.entries(tags).map(([t, c]) => escHtml(t) + ': ' + c).join(', ');
+}
+
+function executeBulkImport() {
+    const parsed = parseBulkText(document.getElementById('bulkImportText').value);
+    if (parsed.length === 0) return;
+
+    let added = 0, updated = 0;
+    parsed.forEach(p => {
+        const existing = state.library.find(item => item.name === p.name);
+        if (existing) {
+            if (p.tag && !existing.tags.includes(p.tag)) { existing.tags.push(p.tag); updated++; }
+        } else {
+            state.library.push({
+                id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + added,
+                name: p.name, tags: p.tag ? [p.tag] : [], duration: 30, locations: []
+            });
+            added++;
+        }
+    });
+
+    closeBulkImport();
+    saveState();
+    renderDatabase();
+    renderTagFilter();
+    setStatus('Bulk import: ' + added + ' new, ' + updated + ' tag updates');
+}
+
+// ============================================================================
+// CSV IMPORT (name, duration, tag)
+// ============================================================================
+
+function openCsvImport() {
+    document.getElementById('csvImportText').value = '';
+    document.getElementById('csvImportPreview').innerHTML = '';
+    document.getElementById('csvImportModal').classList.add('active');
+}
+
+function closeCsvImport() {
+    document.getElementById('csvImportModal').classList.remove('active');
+}
+
+function isMirrorName(name) {
+    const suffixes = ['_Mirror', ' (mirror)', ' [M]', ' (Mirrored)', ' Mirror', ' [Mirrored]'];
+    const lower = name.toLowerCase();
+    return suffixes.some(s => lower.endsWith(s.toLowerCase()));
+}
+
+function parseCsv(text) {
+    const lines = text.split('\n');
+    const result = [];
+    let currentTag = '';
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const parts = trimmed.split(',').map(s => s.trim());
+        if (parts.length === 0 || !parts[0]) { currentTag = ''; continue; }
+        const name = parts[0];
+        const durStr = (parts[1] || '').trim();
+        const dur = Math.round((parseFloat(durStr) || 0) * 100) / 100;
+        const explicitTag = (parts[2] || '').trim();
+        // Skip mirror-named animations
+        if (isMirrorName(name)) continue;
+        // Skip the common "PASTE name..." header row
+        if (name.toLowerCase().startsWith('paste name') && !durStr && !explicitTag) { currentTag = ''; continue; }
+        // Line with name but no duration and no explicit tag = category header
+        if (!durStr && !explicitTag) { currentTag = name; continue; }
+        const tag = explicitTag || currentTag;
+        result.push({ name, duration: dur, tag });
+    }
+    return result;
+}
+
+// Seed / update durations from the included CSV timings (used when library items still have default 30s).
+// This keeps the UX the same while ensuring the database has accurate timing data.
+const DEFAULT_DANCE_TIMES_CSV = `PASTE name and timing of a dance here,
+Dakota_BurlesqueDance01_PARAGON,28.05
+Dakota_BurlesqueDance02_PARAGON,28
+Dakota_BurlesqueDance03_PARAGON,29
+Dakota_BurlesqueDance04_PARAGON,28
+Dakota_BurlesqueDance05_PARAGON,23
+Dakota_BurlesqueDance06_PARAGON,26.1
+Dakota_BurlesqueDance07_PARAGON,29
+Dakota_BurlesqueDance08_PARAGON,28
+,
+Sara - HeelsDance01_PARAGON,28.1
+Sara - HeelsDance02_PARAGON,26.06
+Sara - HeelsDance03_PARAGON,29.01
+Sara - HeelsDance04_PARAGON,26.1
+,
+Vegas_Showgirls_1 29.6,29.6
+Vegas_Showgirls_2 37.4,37.4
+Vegas_Showgirls_3 29.5,29.5
+Vegas_Showgirls_4 29,29
+Vegas_Showgirls_5 28.7,28.7
+Vegas_Showgirls_6 29.6,29.6
+Vegas_Showgirls_7 30.4,30.4
+Vegas_Showgirls_8 30.5,30.5
+Vegas_Showgirls_9 28,28
+Vegas_Showgirls_10 30.8,30.8
+,
+Leni_99_Bento_Dance_MOVE!,48.5
+Leni_96_Bento_Dance_MOVE!,48.4
+,
+Bento Cabaret,
+Bento Cabaret 1,32.6
+Bento Cabaret 2,31.3
+Bento Cabaret 3,21.3
+Bento Cabaret 4,27.7
+Bento Cabaret 5,32.3
+Bento Cabaret 6,30.2
+Bento Cabaret 7,31.6
+Bento Cabaret 8,27.9
+Bento Cabaret 9,29.8
+Bento Cabaret 10,30.5
+Bento Cabaret 11,30.6
+Bento Cabaret 12,31.2
+Bento Cabaret 13,31.5
+Bento Cabaret 14,31.3
+Bento Cabaret 15,30.4
+Bento Cabaret 16,30.3
+,
+SineWave,
+sherbert,18
+,
+Vegas Showgirls,
+Vegas_Showgirls_1_Mirror 29.6,29.6
+Vegas_Showgirls_2_Mirror 37.4,37.4
+Vegas_Showgirls_3_Mirror 29.5,29.5
+Vegas_Showgirls_4_Mirror 29.0,29
+Vegas_Showgirls_5_Mirror 28.7,28.7
+Vegas_Showgirls_6_Mirror 29.6,29.6
+Vegas_Showgirls_7_Mirror 30.4,30.4
+Vegas_Showgirls_8_Mirror 30.5,30.5
+Vegas_Showgirls_9_Mirror 28,28
+Vegas_Showgirls_10_Mirror 30.8,30.8
+,
+Jazz Burlesque (Abranimations),
+Jazz Burlesque Slow 1,33.9
+Jazz Burlesque Slow 2,32
+Jazz Burlesque Slow 3,30.3
+Jazz Burlesque Slow 4,32
+Jazz Burlesque Slow 5,33.5
+Jazz Burlesque Slow 6,33.2
+Jazz Burlesque Slow 7,22.2
+Jazz Burlesque Slow 8,33.2
+Jazz Burlesque Slow 9,37
+Jazz Burlesque Slow 10,32.5
+Jazz Burlesque Slow 11,34
+Quick Jazz Burlesque 1,28.3
+Quick Jazz Burlesque 2,32
+Quick Jazz Burlesque 3,29.4
+Quick Jazz Burlesque 4,33.2
+Quick Jazz Burlesque 5,29
+Quick Jazz Burlesque 6,34.6
+Quick Jazz Burlesque 7,30
+Quick Jazz Burlesque 8,31.6
+Quick Jazz Burlesque 9,31.3
+,
+Cabaret and Chicago,
+Chicago 1,32.6
+Chicago 2,30
+Chicago 3,30.3
+Chicago 4,32.3
+Chicago 5,31.6
+Chicago 6,30.2
+Chicago 7,30.4
+Chicago 8,28.9
+Chicago 9,29.5
+Chicago 10,30.6
+Cabaret1,29
+Cabaret2,27.5
+Cabaret3,30.5
+Cabaret4,29.7
+Cabaret5,30.3
+Cabaret6,28.7
+Cabaret7,29.9
+Cabaret8,29.3
+Cabaret9,28.6
+Cabaret10,29.3
+Cabaret11,31.2
+Cabaret12,31.2
+Cabaret13,31
+Cabaret14,29.5
+Cabaret15,31.2
+,
+JAZZ FUNK,
+Paragon_Madison - JazzFunk 02,28
+Paragon_Madison - JazzFunk 04,29
+Paragon_Madison - JazzFunk 05,28
+,
+,
+Latin Burlesque,
+Paragon_Charlene - Latin Burlesque Dance 01,32
+Paragon_Charlene - Latin Burlesque Dance 02,34
+Paragon_Charlene - Latin Burlesque Dance 03,32
+Paragon_Charlene - Latin Burlesque Dance 04,29
+Paragon_Charlene - Latin Burlesque Dance 05 ,31
+Paragon_Charlene - Latin Burlesque Dance 06,36
+Paragon_Charlene - Latin Burlesque Dance 07,34
+Paragon_Charlene - Latin Burlesque Dance 08,36
+,
+Sophie + Leni (Booty dances),
+Sophie_58_Bento_Dance_MOVE!,30.8
+Sophie_55_Bento_Dance_MOVE!,44.8
+Sophie_51_Bento_Dance_MOVE!,45.8
+Sophie_52_Bento_Dance_MOVE!,28.6
+Leni_96_Bento_Dance_MOVE!,48.4
+Leni_99_Bento_Dance_MOVE!,48.5
+BOWS,
+Court Bow (not looped),3
+Blow Kiss (not looped),3
+Shrug Wink (NOT LOOPED),3
+TaDa! (NOT LOOPED),3
+Curtsy (NOT LOOPED),3
+Single Straight Bow (NOT LOOPED),3
+Single Big Bow (NOT LOOPED),3
+Single Little Bow (NOT LOOPED),3
+accentuated bow (not looped),3
+,
+WALKS AND STANDS,
+BP stand 06,5
+D3660-Walk.N (185cm),5
+,5
+,5
+,5
+,5
+,5
+,
+,
+Sensual Goddess,
+Bento_Sensual_Goddess_1,32.4
+Bento_Sensual_Goddess_2,30.1
+Bento_Sensual_Goddess_3,27.3
+Bento_Sensual_Goddess_4,31.2
+Bento_Sensual_Goddess_5,30.3
+Bento_Sensual_Goddess_6,33
+Bento_Sensual_Goddess_7,33.3
+Bento_Sensual_Goddess_8,29.7
+Bento_Sensual_Goddess_9,30.1
+Bento_Sensual_Goddess_10,31.8
+Bento_Sensual_Goddess_11,31.1
+Bento_Sensual_Goddess_12,30.6
+Bento_Sensual_Goddess_13,30.2
+Bento_Sensual_Goddess_14,29.7
+Bento_Sensual_Goddess_15,29
+Bento_Sensual_Goddess_16,28.6
+,
+,
+*Time Warp Loop,27.8
+*Time Warp Loop,
+,
+,
+,
+Dakota_BurlesqueDance01_PARAGON,28.05
+Dakota_BurlesqueDance02_PARAGON,28
+Dakota_BurlesqueDance03_PARAGON,29
+Dakota_BurlesqueDance04_PARAGON,28
+Dakota_BurlesqueDance05_PARAGON,23
+Dakota_BurlesqueDance06_PARAGON,26.1
+Dakota_BurlesqueDance07_PARAGON,29
+Dakota_BurlesqueDance08_PARAGON,28
+Dakota_BurlesqueDance09_PARAGON,26.2
+Dakota_BurlesqueDance10_PARAGON,28.35
+Dakota_BurlesqueDance11_PARAGON,27.9
+Dakota_BurlesqueDance12_PARAGON,26.7
+Dakota_BurlesqueDance13_PARAGON,25.95
+Dakota_BurlesqueDance14_PARAGON,23.85
+,
+,
+,
+,
+Bento Charleston 1,30.9
+Bento Charleston 1 (mirror),30.9
+Bento Charleston 2,29.2
+Bento Charleston 2 (mirror),29.2
+Bento Charleston 3,33.2
+Bento Charleston 3 (mirror),33.2
+Bento Charleston 4,33.3
+Bento Charleston 4 (mirror),33.3
+Bento Charleston 5,33.3
+Bento Charleston 5 (mirror),33.3
+Bento Charleston 6,32.4
+Bento Charleston 6 (mirror),32.4
+Bento Charleston 7,31.9
+Bento Charleston 7 (mirror),31.9
+Bento Charleston 8,32.1
+Bento Charleston 8 (mirror),32.1
+Bento Charleston 9,32.3
+Bento Charleston 9 (mirror),32.3
+Bento Charleston 10,32.6
+Bento Charleston 10 (mirror),32.6
+Bento Charleston 11,34.1
+Bento Charleston 11 (mirror),34.1
+Bento Charleston 12,31.7
+Bento Charleston 12 (mirror),31.7`;
+
+let g_defaultTimeEntries = null;
+let g_defaultTimeMap = null;
+
+function getDefaultTimeData() {
+    if (g_defaultTimeEntries && g_defaultTimeMap) return { entries: g_defaultTimeEntries, map: g_defaultTimeMap };
+    const entries = parseCsv(DEFAULT_DANCE_TIMES_CSV);
+    const map = {};
+    entries.forEach(e => {
+        if (!e || !e.name) return;
+        if (e.duration > 0) map[e.name] = { duration: e.duration, tag: e.tag || '' };
+    });
+    g_defaultTimeEntries = entries;
+    g_defaultTimeMap = map;
+    return { entries, map };
+}
+
+function applyDefaultTimesToState() {
+    const { entries, map } = getDefaultTimeData();
+    if (!Array.isArray(state.library)) state.library = [];
+    if (!Array.isArray(state.savedPlaylists)) state.savedPlaylists = [];
+
+    let changed = false;
+
+    // If library is empty, seed it from the known timings.
+    if (state.library.length === 0 && entries.length > 0) {
+        entries.forEach((e, i) => {
+            state.library.push({
+                id: 'lib_seed_' + i,
+                name: e.name,
+                tags: e.tag ? [e.tag] : [],
+                duration: e.duration || 30,
+                locations: []
+            });
+        });
+        changed = true;
+    } else {
+        // Otherwise, fill in missing/default durations without overwriting custom values.
+        state.library.forEach(item => {
+            const info = map[item.name];
+            if (!info) return;
+            if (!item.duration || item.duration === 30) { item.duration = info.duration; changed = true; }
+            if (info.tag) {
+                if (!Array.isArray(item.tags)) item.tags = [];
+                if (!item.tags.includes(info.tag)) { item.tags.push(info.tag); changed = true; }
+            }
+        });
+    }
+
+    // Update saved playlists (only when they still have default/missing durations).
+    state.savedPlaylists.forEach(pl => {
+        if (!pl || !Array.isArray(pl.items)) return;
+        pl.items.forEach(it => {
+            const info = map[it.name];
+            if (!info) return;
+            if (!it.duration || it.duration === 30) { it.duration = info.duration; changed = true; }
+        });
+    });
+
+    if (changed) saveState();
+    return changed;
+}
+
+function applyDurationMapToState(durationMap) {
+    if (!durationMap || typeof durationMap !== 'object') return { changed: false, updated: 0 };
+    if (!Array.isArray(state.library)) state.library = [];
+    if (!Array.isArray(state.savedPlaylists)) state.savedPlaylists = [];
+
+    let changed = false;
+    let updated = 0;
+
+    state.library.forEach(item => {
+        const dur = durationMap[item.name];
+        if (!dur) return;
+        if (!item.duration || item.duration === 30) { item.duration = parseDuration(dur, item.duration || 30); changed = true; updated++; }
+    });
+
+    state.savedPlaylists.forEach(pl => {
+        if (!pl || !Array.isArray(pl.items)) return;
+        pl.items.forEach(it => {
+            const dur = durationMap[it.name];
+            if (!dur) return;
+            if (!it.duration || it.duration === 30) { it.duration = parseDuration(dur, it.duration || 30); changed = true; updated++; }
+        });
+    });
+
+    if (changed) saveState();
+    return { changed, updated };
+}
+
+async function applyPdfDerivedTimesToState() {
+    // Only attempt fetch when served over http(s) (GitHub Pages or a local server).
+    if (!(location.protocol === 'http:' || location.protocol === 'https:')) return { changed: false, updated: 0 };
+    try {
+        const url = new URL('_derived_times_for_library.json', location.href);
+        const res = await fetch(url.toString(), { cache: 'no-cache' });
+        if (!res.ok) return { changed: false, updated: 0 };
+        const json = await res.json();
+        return applyDurationMapToState(json);
+    } catch (e) {
+        return { changed: false, updated: 0 };
+    }
+}
+
+function previewCsvImport() {
+    const parsed = parseCsv(document.getElementById('csvImportText').value);
+    const preview = document.getElementById('csvImportPreview');
+    if (parsed.length === 0) { preview.innerHTML = ''; return; }
+    const withDur = parsed.filter(p => p.duration > 0).length;
+    const withTag = parsed.filter(p => p.tag).length;
+    preview.innerHTML = 'Found <b>' + parsed.length + '</b> entries, <b>' + withDur + '</b> with duration, <b>' + withTag + '</b> with tags';
+}
+
+function executeCsvImport() {
+    const parsed = parseCsv(document.getElementById('csvImportText').value);
+    if (parsed.length === 0) return;
+
+    let added = 0, updated = 0;
+    parsed.forEach(p => {
+        const existing = state.library.find(item => item.name === p.name);
+        if (existing) {
+            if (p.duration > 0) existing.duration = p.duration;
+            if (p.tag && !existing.tags.includes(p.tag)) existing.tags.push(p.tag);
+            updated++;
+        } else {
+            state.library.push({
+                id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + added,
+                name: p.name, tags: p.tag ? [p.tag] : [], duration: p.duration || 30, locations: []
+            });
+            added++;
+        }
+    });
+
+    closeCsvImport();
+    saveState();
+    renderDatabase();
+    renderTagFilter();
+    setStatus('CSV import: ' + added + ' new, ' + updated + ' updated');
+}
+
+// ============================================================================
+// PLAYLIST BUILDER — RENDERING
+// ============================================================================
+
+function renderPlaylistSelect() {
+    const select = document.getElementById('plSelect');
+    const current = select.value;
+    select.innerHTML = '<option value="">-- Select --</option>' +
+        state.savedPlaylists.map(sp =>
+            '<option value="' + escAttr(sp.id) + '"' + (sp.id === current ? ' selected' : '') + '>'
+            + escHtml(sp.name) + ' (' + sp.items.length + ')</option>'
+        ).join('');
+}
+
+function renderPlaylist() {
+    const tbody = document.getElementById('plBody');
+
+    if (currentPlaylist.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:#555; text-align:center; padding:20px;">Double-click an animation to add it</td></tr>';
+        document.getElementById('plTotal').textContent = 'Empty playlist';
+        return;
+    }
+
+    tbody.innerHTML = currentPlaylist.map((item, i) => {
+        const warn = (item.inPrim === false) ? ' <span class="loc-warn" title="Not marked as In Prim">!</span>' : '';
+        return '<tr draggable="true" data-idx="' + i + '" '
+            + 'ondragstart="plDragStart(event, ' + i + ')" ondragend="plDragEnd(event)" '
+            + 'ondragover="plDragOver(event)" ondrop="plDrop(event, ' + i + ')">'
+            + '<td>' + (i + 1) + '</td>'
+            + '<td>' + escHtml(item.name) + warn + '</td>'
+            + '<td class="editable" onclick="editPlaylistDuration(' + i + ', this)">' + (item.duration || 30) + '</td>'
+            + '<td style="text-align:right;">'
+            + '<button class="btn-small" onclick="movePlaylistItem(' + i + ', -1)" title="Move up">&uarr;</button>'
+            + '<button class="btn-small" onclick="movePlaylistItem(' + i + ', 1)" title="Move down">&darr;</button> '
+            + '<button class="btn-small btn-danger" onclick="removePlaylistItem(' + i + ')">&times;</button>'
+            + '</td></tr>';
+    }).join('');
+
+    const totalSecs = currentPlaylist.reduce((sum, item) => sum + (item.duration || 30), 0);
+    document.getElementById('plTotal').textContent = 'Total: ' + formatDuration(totalSecs) + ' (' + currentPlaylist.length + ' dances)';
+}
+
+function onPlaylistSelect() {
+    // Just highlights the selection; user clicks Load to actually load
+}
+
+// ============================================================================
+// PLAYLIST BUILDER — OPERATIONS
+// ============================================================================
+
+function addToPlaylistFromDb(id) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    const inPrim = item.locations && item.locations.includes('prim');
+    currentPlaylist.push({ name: item.name, duration: item.duration || 30, inPrim: inPrim });
+    renderPlaylist();
+    setStatus('Added "' + item.name + '" to playlist' + (inPrim ? '' : ' (not in prim!)'));
+}
+
+function addAllFilteredToPlaylist() {
+    const filtered = getFilteredLibrary();
+    if (filtered.length === 0) return;
+    let notInPrim = 0;
+    filtered.forEach(item => {
+        const inPrim = item.locations && item.locations.includes('prim');
+        if (!inPrim) notInPrim++;
+        currentPlaylist.push({ name: item.name, duration: item.duration || 30, inPrim: inPrim });
+    });
+    renderPlaylist();
+    setStatus('Added ' + filtered.length + ' animations to playlist' + (notInPrim > 0 ? ' (' + notInPrim + ' not in prim)' : ''));
+}
+
+function removePlaylistItem(idx) {
+    currentPlaylist.splice(idx, 1);
+    renderPlaylist();
+}
+
+function movePlaylistItem(idx, dir) {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= currentPlaylist.length) return;
+    const temp = currentPlaylist[idx];
+    currentPlaylist[idx] = currentPlaylist[newIdx];
+    currentPlaylist[newIdx] = temp;
+    renderPlaylist();
+}
+
+function editPlaylistDuration(idx, td) {
+    const current = currentPlaylist[idx].duration || 30;
+    td.innerHTML = '<input type="number" class="edit-input" value="' + current + '" min="1" step="0.01" '
+        + 'onblur="savePlaylistDuration(' + idx + ', this.value)" '
+        + 'onkeydown="if(event.key===\'Enter\')this.blur(); if(event.key===\'Escape\'){this.value=' + current + ';this.blur();}">';
+    td.querySelector('input').focus();
+    td.querySelector('input').select();
+}
+
+function savePlaylistDuration(idx, value) {
+    if (idx >= 0 && idx < currentPlaylist.length) {
+        currentPlaylist[idx].duration = Math.max(1, parseDuration(value, 30));
+    }
+    renderPlaylist();
+}
+
+function clearCurrentPlaylist() {
+    if (currentPlaylist.length === 0) return;
+    if (!confirm('Clear current playlist?')) return;
+    currentPlaylist = [];
+    renderPlaylist();
+    setStatus('Playlist cleared');
+}
+
+// ============================================================================
+// PLAYLIST BUILDER — DRAG & DROP REORDER
+// ============================================================================
+
+function plDragStart(event, idx) {
+    dragIdx = idx;
+    event.dataTransfer.effectAllowed = 'move';
+    event.target.classList.add('dragging');
+}
+
+function plDragEnd(event) {
+    event.target.classList.remove('dragging');
+    dragIdx = -1;
+    document.querySelectorAll('#plBody tr').forEach(tr => {
+        tr.classList.remove('drop-above', 'drop-below');
+    });
+}
+
+function plDragOver(event) {
+    if (dragIdx < 0) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+
+    const rows = [...document.querySelectorAll('#plBody tr[data-idx]')];
+    rows.forEach(tr => tr.classList.remove('drop-above', 'drop-below'));
+
+    const tr = event.target.closest('tr[data-idx]');
+    if (!tr) return;
+    const rect = tr.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    if (event.clientY < midY) tr.classList.add('drop-above');
+    else tr.classList.add('drop-below');
+}
+
+function plDrop(event, targetIdx) {
+    event.preventDefault();
+    if (dragIdx < 0 || dragIdx === targetIdx) return;
+
+    const tr = event.target.closest('tr[data-idx]');
+    let insertIdx = targetIdx;
+    if (tr && tr.classList.contains('drop-below')) insertIdx = targetIdx + 1;
+
+    const item = currentPlaylist.splice(dragIdx, 1)[0];
+    if (insertIdx > dragIdx) insertIdx--;
+    currentPlaylist.splice(insertIdx, 0, item);
+
+    dragIdx = -1;
+    document.querySelectorAll('#plBody tr').forEach(r => r.classList.remove('drop-above', 'drop-below'));
+    renderPlaylist();
+}
+
+// ============================================================================
+// PLAYLIST BUILDER — SAVE/LOAD/DELETE
+// ============================================================================
+
+function newPlaylist() {
+    currentPlaylist = [];
+    currentPlaylistId = '';
+    document.getElementById('plName').value = '';
+    document.getElementById('plSelect').value = '';
+    renderPlaylist();
+    setStatus('New playlist started');
+}
+
+function loadPlaylist() {
+    const id = document.getElementById('plSelect').value;
+    if (!id) return;
+    const sp = state.savedPlaylists.find(p => p.id === id);
+    if (!sp) return;
+    currentPlaylist = sp.items.map(item => ({ ...item }));
+    currentPlaylistId = sp.id;
+    document.getElementById('plName').value = sp.name;
+    renderPlaylist();
+    setStatus('Loaded "' + sp.name + '"');
+}
+
+function savePlaylist() {
+    const name = document.getElementById('plName').value.trim();
+    if (!name) { setStatus('Enter a playlist name'); return; }
+    if (currentPlaylist.length === 0) { setStatus('Playlist is empty'); return; }
+
+    if (currentPlaylistId) {
+        // Update existing
+        const sp = state.savedPlaylists.find(p => p.id === currentPlaylistId);
+        if (sp) {
+            sp.name = name;
+            sp.items = currentPlaylist.map(item => ({ ...item }));
+            sp.updatedAt = new Date().toISOString();
+            setStatus('Saved "' + name + '"');
+        }
+    } else {
+        // Create new
+        const sp = {
+            id: 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            name: name,
+            items: currentPlaylist.map(item => ({ ...item })),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        state.savedPlaylists.push(sp);
+        currentPlaylistId = sp.id;
+        setStatus('Created playlist "' + name + '"');
+    }
+
+    saveState();
+    renderPlaylistSelect();
+    document.getElementById('plSelect').value = currentPlaylistId;
+}
+
+function deletePlaylist() {
+    const id = document.getElementById('plSelect').value;
+    if (!id) return;
+    const sp = state.savedPlaylists.find(p => p.id === id);
+    if (!sp) return;
+    if (!confirm('Delete "' + sp.name + '"?')) return;
+
+    state.savedPlaylists = state.savedPlaylists.filter(p => p.id !== id);
+    if (currentPlaylistId === id) {
+        currentPlaylistId = '';
+        document.getElementById('plName').value = '';
+    }
+    saveState();
+    renderPlaylistSelect();
+    setStatus('Deleted "' + sp.name + '"');
+}
+
+// ============================================================================
+// EXPORT / IMPORT
+// ============================================================================
+
+function exportPlaylistJson() {
+    if (currentPlaylist.length === 0) { setStatus('Playlist is empty'); return; }
+    const name = document.getElementById('plName').value.trim() || 'playlist';
+    const data = { name: name, items: currentPlaylist };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('Exported "' + name + '.json"');
+}
+
+function importPlaylistJson() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function () {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+            try {
+                const data = JSON.parse(reader.result);
+                if (!data.items || !Array.isArray(data.items)) { setStatus('Invalid playlist file'); return; }
+                currentPlaylist = data.items.map(item => ({ name: item.name, duration: item.duration || 30 }));
+                currentPlaylistId = '';
+                document.getElementById('plName').value = data.name || file.name.replace('.json', '');
+                renderPlaylist();
+                setStatus('Imported playlist (' + currentPlaylist.length + ' dances)');
+            } catch (e) { setStatus('Import failed: ' + e.message); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function exportPlaylistNotecard() {
+    if (currentPlaylist.length === 0) { setStatus('Playlist is empty'); return; }
+    const name = document.getElementById('plName').value.trim() || 'Playlist';
+    const lines = ['# ' + name, '# Exported from Dance Database Manager', ''];
+    currentPlaylist.forEach(item => lines.push(item.name));
+    document.getElementById('notecardText').value = lines.join('\n');
+    document.getElementById('notecardModal').classList.add('active');
+}
+
+function copyNotecard() {
+    const textarea = document.getElementById('notecardText');
+    textarea.select();
+    document.execCommand('copy');
+    setStatus('Copied to clipboard');
+}
+
+function closeNotecardModal() {
+    document.getElementById('notecardModal').classList.remove('active');
+}
+
+function exportProject() {
+    const data = {
+        version: state.version,
+        mirrorRules: state.mirrorRules,
+        library: state.library,
+        savedPlaylists: state.savedPlaylists
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dance-database.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('Project exported');
+}
+
+function importProject() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function () {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+            try {
+                const data = JSON.parse(reader.result);
+                if (data.library) state.library = data.library;
+                if (data.savedPlaylists) state.savedPlaylists = data.savedPlaylists;
+                saveState();
+                renderAll();
+                setStatus('Project imported');
+            } catch (e) { setStatus('Import failed: ' + e.message); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+// ============================================================================
+// SEND TO SL
+// ============================================================================
+
+function sendToSL() {
+    const url = document.getElementById('slUrl').value.trim();
+    if (!url) { setStatus('Enter the controller HTTP-in URL'); return; }
+    if (currentPlaylist.length === 0) { setStatus('Playlist is empty'); return; }
+
+    // Build PLAYLIST|name:dur|name:dur|... command
+    const parts = currentPlaylist.map(p => p.name + ':' + (p.duration || 30));
+    const command = 'PLAYLIST|' + parts.join('|');
+
+    fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: command
+    }).then(() => {
+        setStatus('Sent playlist (' + currentPlaylist.length + ' dances) to controller');
+    }).catch(err => {
+        setStatus('Send failed: ' + err.message);
+    });
+
+    // Also save the URL for mirror-sync.html
+    state.controllerUrl = url;
+    saveState();
+}
+
+// ============================================================================
+// KEYBOARD SHORTCUTS
+// ============================================================================
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active.id === 'addName' || active.id === 'addDur' || active.id === 'addTag') addAnimation();
+    }
+});
+
+// ============================================================================
+// INIT
+// ============================================================================
+
+function renderAll() {
+    renderDatabase();
+    renderTagFilter();
+    renderPlaylistSelect();
+    renderPlaylist();
+}
+
+loadState();
+applyDefaultTimesToState();
+// Restore SL URL if saved
+if (state.controllerUrl) {
+    document.getElementById('slUrl').value = state.controllerUrl;
+}
+renderAll();
+setStatus('Dance Database Manager v1.6 ready (' + state.library.length + ' animations, ' + state.savedPlaylists.length + ' saved playlists)');
+
+// Optionally apply additional timings derived from the PDF (when hosted over HTTP).
+applyPdfDerivedTimesToState().then(r => {
+    if (r && r.changed) {
+        renderAll();
+        setStatus('Dance Database Manager v1.6 ready (' + state.library.length + ' animations, ' + state.savedPlaylists.length + ' saved playlists) — applied ' + r.updated + ' PDF timings');
+    }
+});
+</script>
+</body>
+</html>

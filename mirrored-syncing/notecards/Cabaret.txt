@@ -1,0 +1,17 @@
+# Cabaret (15 dances)
+# Duration-aware — auto-advance supported
+Cabaret1:29
+Cabaret2:27.5
+Cabaret3:30.5
+Cabaret4:29.7
+Cabaret5:30.3
+Cabaret6:28.7
+Cabaret7:29.9
+Cabaret8:29.3
+Cabaret9:28.6
+Cabaret10:29.3
+Cabaret11:31.2
+Cabaret12:31.2
+Cabaret13:31
+Cabaret14:29.5
+Cabaret15:31.2

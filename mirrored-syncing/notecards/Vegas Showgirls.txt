@@ -1,0 +1,12 @@
+# Vegas Showgirls (10 dances)
+# Duration-aware — auto-advance supported
+Vegas_Showgirls_1:29.6
+Vegas_Showgirls_2:37.4
+Vegas_Showgirls_3:29.5
+Vegas_Showgirls_4:29
+Vegas_Showgirls_5:28.7
+Vegas_Showgirls_6:29.6
+Vegas_Showgirls_7:30.4
+Vegas_Showgirls_8:30.5
+Vegas_Showgirls_9:28
+Vegas_Showgirls_10:30.8

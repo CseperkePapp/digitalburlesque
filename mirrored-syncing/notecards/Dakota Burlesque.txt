@@ -1,0 +1,16 @@
+# Dakota Burlesque (14 dances)
+# Duration-aware — auto-advance supported
+Dakota_BurlesqueDance01_PARAGON:28.05
+Dakota_BurlesqueDance02_PARAGON:28
+Dakota_BurlesqueDance03_PARAGON:29
+Dakota_BurlesqueDance04_PARAGON:28
+Dakota_BurlesqueDance05_PARAGON:23
+Dakota_BurlesqueDance06_PARAGON:26.1
+Dakota_BurlesqueDance07_PARAGON:29
+Dakota_BurlesqueDance08_PARAGON:28
+Dakota_BurlesqueDance09_PARAGON:26.2
+Dakota_BurlesqueDance10_PARAGON:28.35
+Dakota_BurlesqueDance11_PARAGON:27.9
+Dakota_BurlesqueDance12_PARAGON:26.7
+Dakota_BurlesqueDance13_PARAGON:25.95
+Dakota_BurlesqueDance14_PARAGON:23.85

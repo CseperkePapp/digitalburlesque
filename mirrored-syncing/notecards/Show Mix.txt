@@ -1,0 +1,26 @@
+# Show Mix — a curated mix from multiple sets
+# Duration-aware — auto-advance supported
+
+# Opening — Charleston
+Bento Charleston 1:30.9
+Bento Charleston 3:33.2
+Bento Charleston 5:33.3
+
+# Act 1 — Cabaret
+Bento Cabaret 1:32.6
+Bento Cabaret 5:32.3
+Bento Cabaret 10:30.5
+
+# Act 2 — Vegas
+Vegas_Showgirls_1:29.6
+Vegas_Showgirls_3:29.5
+Vegas_Showgirls_6:29.6
+
+# Act 3 — Sensual Goddess
+Bento_Sensual_Goddess_1:32.4
+Bento_Sensual_Goddess_5:30.3
+Bento_Sensual_Goddess_10:31.8
+
+# Finale — Charleston
+Bento Charleston 11:34.1
+Bento Charleston 12:31.7

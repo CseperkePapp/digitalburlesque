@@ -1,0 +1,6 @@
+# Sara Heels Dance — Paragon (4 dances)
+# Duration-aware — auto-advance supported
+Sara - HeelsDance01_PARAGON:28.1
+Sara - HeelsDance02_PARAGON:26.06
+Sara - HeelsDance03_PARAGON:29.01
+Sara - HeelsDance04_PARAGON:26.1

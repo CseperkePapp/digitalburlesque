@@ -151,7 +151,7 @@
 
 <!-- TOOLBAR -->
 <div id="toolbar">
-    <h1>Mirror Sync Dance Controller v1.1</h1>
+    <h1>Mirror Sync Dance Controller v1.5</h1>
     <div class="actions">
         <button onclick="toggleLibraryPanel()">Library</button>
         <button onclick="exportProject()">Export</button>
@@ -278,6 +278,11 @@
                 <button class="btn-small" onclick="exportPlaylistFile()">Export .json</button>
                 <button class="btn-small" onclick="importPlaylistFile()">Import .json</button>
             </div>
+            <div class="saved-pl-bar">
+                <span class="bar-label">Notecard:</span>
+                <input type="text" id="notecardName" placeholder="Notecard name in prim" style="min-width:150px;">
+                <button class="btn-small" onclick="loadNotecard()">Load from Notecard</button>
+            </div>
             <table id="playlist-table">
                 <thead>
                     <tr>
@@ -308,6 +313,7 @@
                 <button onclick="sendCommand('NEXT')">&#9654;&#9654;</button>
                 <button class="btn-stop" onclick="sendCommand('STOP')">&#9632; STOP</button>
                 <button class="btn-danger btn-small" onclick="sendCommand('RESET')">RESET</button>
+                <button id="autoAdvBtn" class="btn-small" onclick="toggleAutoAdvance()" title="Auto-advance based on dance durations">AUTO</button>
                 <div class="now-playing">
                     Now: <span class="anim-name" id="nowPlaying">-</span>
                     <span class="position" id="playPosition"></span>
@@ -1183,14 +1189,18 @@ function clearPlaylist() {
     logMessage('Playlist cleared', 'ok');
 }
 
+function buildPlaylistCommand() {
+    // Build PLAYLIST|name:dur|name:dur|... format (includes durations)
+    return 'PLAYLIST|' + state.playlist.map(p => p.name + ':' + (p.duration || 0)).join('|');
+}
+
 function sendPlaylist() {
     if (state.playlist.length === 0) {
         logMessage('Playlist is empty', 'err');
         return;
     }
 
-    const names = state.playlist.map(p => p.name).join('|');
-    sendCommand('PLAYLIST|' + names);
+    sendCommand(buildPlaylistCommand());
     logMessage('Sent playlist (' + state.playlist.length + ' dances) to controller', 'ok');
 }
 
@@ -1199,11 +1209,66 @@ async function playDance() {
         logMessage('Playlist is empty — add animations first', 'err');
         return;
     }
-    // Send current playlist to controller, then start playback
-    const names = state.playlist.map(p => p.name).join('|');
-    await sendCommand('PLAYLIST|' + names);
+    // Send current playlist to controller (with durations), then start playback
+    await sendCommand(buildPlaylistCommand());
     logMessage('Sent playlist (' + state.playlist.length + ' dances) to controller', 'ok');
     sendCommand('PLAY');
+}
+
+// ============================================================================
+// AUTO-ADVANCE (JS-based)
+// ============================================================================
+
+let autoAdvanceEnabled = false;
+let autoAdvanceTimer = null;
+
+function toggleAutoAdvance() {
+    autoAdvanceEnabled = !autoAdvanceEnabled;
+    const btn = document.getElementById('autoAdvBtn');
+    if (autoAdvanceEnabled) {
+        btn.classList.add('btn-primary');
+        sendCommand('AUTOPLAY|ON');
+        logMessage('Auto-advance enabled', 'ok');
+        scheduleAutoAdvance();
+    } else {
+        btn.classList.remove('btn-primary');
+        sendCommand('AUTOPLAY|OFF');
+        clearTimeout(autoAdvanceTimer);
+        autoAdvanceTimer = null;
+        logMessage('Auto-advance disabled', 'ok');
+    }
+}
+
+function scheduleAutoAdvance() {
+    clearTimeout(autoAdvanceTimer);
+    if (!autoAdvanceEnabled || !state.playing || state.playlist.length === 0) return;
+    const dur = state.playlist[state.playIdx]?.duration || 30;
+    if (dur > 0) {
+        autoAdvanceTimer = setTimeout(onAutoAdvanceTick, dur * 1000);
+    }
+}
+
+function onAutoAdvanceTick() {
+    if (!autoAdvanceEnabled || !state.playing) return;
+    sendCommand('NEXT');
+    // Advance local state
+    state.playIdx++;
+    if (state.playIdx >= state.playlist.length) state.playIdx = 0;
+    state.playing = true;
+    updateTransport();
+    renderPlaylist();
+    // Schedule next
+    scheduleAutoAdvance();
+}
+
+function loadNotecard() {
+    const name = document.getElementById('notecardName').value.trim();
+    if (!name) {
+        logMessage('Enter a notecard name', 'err');
+        return;
+    }
+    sendCommand('LOADNOTE|' + name);
+    logMessage('Loading notecard "' + name + '" from controller...', 'ok');
 }
 
 // ============================================================================
@@ -1549,6 +1614,7 @@ document.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         if (document.activeElement.id === 'addAnimInput') addToPlaylist();
         else if (document.activeElement.id === 'libAddName' || document.activeElement.id === 'libAddTag') addToLibraryFromInput();
+        else if (document.activeElement.id === 'notecardName') loadNotecard();
     }
 });
 
@@ -1565,7 +1631,7 @@ updateTransport();
 renderLibrary();
 renderTagFilter();
 renderSavedPlaylistSelect();
-logMessage('Mirror Sync Dance Controller v1.1 ready', 'info');
+logMessage('Mirror Sync Dance Controller v1.5 ready', 'info');
 </script>
 </body>
 </html>

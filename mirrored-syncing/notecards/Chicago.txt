@@ -1,0 +1,12 @@
+# Chicago (10 dances)
+# Duration-aware — auto-advance supported
+Chicago 1:32.6
+Chicago 2:30
+Chicago 3:30.3
+Chicago 4:32.3
+Chicago 5:31.6
+Chicago 6:30.2
+Chicago 7:30.4
+Chicago 8:28.9
+Chicago 9:29.5
+Chicago 10:30.6

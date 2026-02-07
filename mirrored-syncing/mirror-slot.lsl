@@ -7,6 +7,8 @@
 // The controller tells each slot which animation to play (already resolved
 // to the correct name — original for Group A, mirrored for Group B).
 
+integer DEBUG = FALSE;  // Set TRUE to enable owner chat logging
+
 integer g_slotNum = 0;
 key g_avatarKey = NULL_KEY;
 integer g_hasPerms = FALSE;
@@ -48,7 +50,7 @@ default
             return;
         }
 
-        llOwnerSay("Mirror slot " + (string)g_slotNum + " ready");
+        if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + " ready");
     }
 
     link_message(integer sender_num, integer num, string str, key id)
@@ -70,7 +72,7 @@ default
             g_activeAnims = [];
 
             llRequestPermissions(g_avatarKey, PERMISSION_TRIGGER_ANIMATION);
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": requesting permissions from " + llKey2Name(g_avatarKey));
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": requesting permissions from " + llKey2Name(g_avatarKey));
             return;
         }
 
@@ -84,7 +86,7 @@ default
             g_avatarKey = NULL_KEY;
             g_hasPerms = FALSE;
             g_activeAnims = [];
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": released");
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": released");
             return;
         }
 
@@ -101,7 +103,7 @@ default
             llStartAnimation(animName);
             g_activeAnims = [animName];
 
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": playing '" + animName + "'");
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": playing '" + animName + "'");
             return;
         }
 
@@ -117,7 +119,7 @@ default
             if (idx != -1)
                 g_activeAnims = llDeleteSubList(g_activeAnims, idx, idx);
 
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": stopped '" + animName + "'");
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": stopped '" + animName + "'");
             return;
         }
 
@@ -126,7 +128,7 @@ default
         {
             if (g_avatarKey == NULL_KEY || !g_hasPerms) return;
             stopAllAnims();
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": all animations stopped");
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": all animations stopped");
             return;
         }
     }
@@ -136,14 +138,14 @@ default
         if (perm & PERMISSION_TRIGGER_ANIMATION)
         {
             g_hasPerms = TRUE;
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": permission granted by " + llKey2Name(g_avatarKey));
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": permission granted by " + llKey2Name(g_avatarKey));
             // Report success to controller
             llMessageLinked(LINK_THIS, g_slotNum, "PERMS_OK", g_avatarKey);
         }
         else
         {
             g_hasPerms = FALSE;
-            llOwnerSay("Mirror slot " + (string)g_slotNum + ": permission DENIED by " + llKey2Name(g_avatarKey));
+            if (DEBUG) llOwnerSay("Mirror slot " + (string)g_slotNum + ": permission DENIED by " + llKey2Name(g_avatarKey));
             // Report failure to controller
             llMessageLinked(LINK_THIS, g_slotNum, "PERMS_FAIL", g_avatarKey);
         }
