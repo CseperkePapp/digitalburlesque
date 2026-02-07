@@ -1,4 +1,4 @@
-// Mirror Sync Dance Controller v1.0
+// Mirror Sync Dance Controller v1.2
 // Place in a prim at your dance area.
 // Also place: mirror-slot 1 through mirror-slot 8, plus all dance animations
 // (both original and mirrored versions).
@@ -225,13 +225,10 @@ stopAllAnims()
     updateHovertext();
 }
 
-// Advance to next playlist entry
+// Advance to next playlist entry (seamless — slot scripts handle stop+start)
 advancePlaylist(integer direction)
 {
     if (llGetListLength(g_playlist) == 0) return;
-
-    if (g_playing)
-        stopAllAnims();
 
     g_playIdx += direction;
     if (g_playIdx >= llGetListLength(g_playlist))
@@ -510,7 +507,7 @@ default
         g_urlReqId = llRequestURL();
 
         updateHovertext();
-        llOwnerSay("Mirror Sync Dance Controller v1.0 starting...");
+        llOwnerSay("Mirror Sync Dance Controller v1.2 starting...");
     }
 
     // ========================================================================

@@ -1,4 +1,4 @@
-// Mirror Slot Script v1.0
+// Mirror Slot Script v1.2
 // Copy this script and rename to "mirror-slot 1", "mirror-slot 2", etc. (up to 8).
 // Place all copies in the controller prim alongside mirror-controller.lsl
 // and all dance animation files (both original and mirrored versions).
@@ -88,16 +88,18 @@ default
             return;
         }
 
-        // --- ANIM|animName: start animation ---
+        // --- ANIM|animName: start animation (seamless transition) ---
         if (llSubStringIndex(str, "ANIM|") == 0)
         {
             if (g_avatarKey == NULL_KEY || !g_hasPerms) return;
 
             string animName = llGetSubString(str, 5, -1);
-            llStartAnimation(animName);
 
-            if (llListFindList(g_activeAnims, [animName]) == -1)
-                g_activeAnims += [animName];
+            // Stop old animations first for seamless transition
+            stopAllAnims();
+
+            llStartAnimation(animName);
+            g_activeAnims = [animName];
 
             llOwnerSay("Mirror slot " + (string)g_slotNum + ": playing '" + animName + "'");
             return;
