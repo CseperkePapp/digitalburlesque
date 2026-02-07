@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mirror Sync Dance Controller</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #1a1a1a; color: #eee; font-family: 'Segoe UI', sans-serif; }
+
+        /* === LAYOUT === */
+        #toolbar { background: #333; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #444; }
+        #toolbar h1 { font-size: 16px; font-weight: 600; }
+        #toolbar .actions { display: flex; gap: 8px; }
+
+        #main { display: flex; height: calc(100vh - 44px); }
+        #sidebar { width: 260px; min-width: 260px; background: #222; border-right: 1px solid #444; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+        #content { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+
+        /* === SECTIONS === */
+        .section { background: #2a2a2a; border: 1px solid #444; border-radius: 4px; padding: 12px; }
+        .section h3 { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+        /* === INPUTS === */
+        input[type="text"], input[type="number"] { background: #111; color: #eee; border: 1px solid #555; padding: 5px 8px; font-size: 12px; font-family: inherit; border-radius: 2px; }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: #88f; outline: none; }
+        select { background: #333; color: #eee; border: 1px solid #555; padding: 4px 6px; font-size: 12px; border-radius: 2px; }
+
+        /* === BUTTONS === */
+        button { cursor: pointer; padding: 5px 12px; background: #444; color: white; border: 1px solid #666; font-size: 12px; font-family: inherit; border-radius: 2px; }
+        button:hover { background: #555; }
+        button:active { background: #666; }
+        .btn-primary { background: #2a6; border-color: #3b7; }
+        .btn-primary:hover { background: #3b7; }
+        .btn-danger { background: #a33; border-color: #c44; }
+        .btn-danger:hover { background: #c44; }
+        .btn-play { background: #282; border-color: #3a3; font-size: 14px; font-weight: bold; padding: 8px 20px; }
+        .btn-play:hover { background: #3a3; }
+        .btn-stop { background: #822; border-color: #a33; font-size: 14px; font-weight: bold; padding: 8px 20px; }
+        .btn-stop:hover { background: #a33; }
+        .btn-small { padding: 3px 8px; font-size: 11px; }
+
+        /* === CONNECTION === */
+        #urlInput { width: 100%; margin-bottom: 6px; }
+        .conn-row { display: flex; gap: 6px; align-items: center; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot.disconnected { background: #666; }
+        .status-dot.connected { background: #0f0; }
+        .status-dot.error { background: #f00; }
+        #connStatus { font-size: 11px; color: #888; }
+
+        /* === MIRROR RULE === */
+        .mirror-preview { font-size: 11px; color: #888; margin-top: 6px; }
+        .mirror-preview span { color: #8cf; }
+        .rule-row { display: flex; gap: 6px; align-items: center; }
+        #mirrorRuleInput { flex: 1; }
+        .presets { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+        .presets button { font-size: 10px; padding: 2px 6px; }
+        .rule-toggle { display: flex; align-items: center; gap: 6px; padding: 3px 6px; margin-bottom: 3px; border-radius: 3px; font-size: 12px; cursor: pointer; }
+        .rule-toggle.active { background: #2a3a2a; color: #6c6; }
+        .rule-toggle.inactive { background: #333; color: #666; text-decoration: line-through; }
+        .rule-toggle .rule-num { font-size: 10px; color: #888; min-width: 16px; }
+        .rule-toggle .rule-remove { margin-left: auto; color: #a33; cursor: pointer; font-size: 10px; }
+
+        /* === AVATAR SCANNER === */
+        .avatar-list { max-height: 180px; overflow-y: auto; }
+        .avatar-item { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 12px; }
+        .avatar-item input[type="checkbox"] { accent-color: #88f; }
+        .avatar-item .assigned-tag { font-size: 10px; color: #fa0; margin-left: auto; }
+        .scan-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+        /* === GROUPS === */
+        #groups-container { display: flex; gap: 15px; }
+        .group-panel { flex: 1; min-width: 0; }
+        .group-panel h4 { font-size: 13px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid; }
+        .group-a h4 { border-color: #4a4; color: #6c6; }
+        .group-b h4 { border-color: #48c; color: #6af; }
+        .group-member { display: flex; align-items: center; gap: 6px; padding: 4px 6px; background: #333; border-radius: 3px; margin-bottom: 4px; font-size: 12px; }
+        .group-member .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .group-member .slot-num { color: #888; font-size: 10px; min-width: 18px; }
+        .empty-slot { color: #555; font-style: italic; padding: 4px 6px; font-size: 12px; }
+        .group-actions { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
+
+        /* === PLAYLIST === */
+        #playlist-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        #playlist-table th { text-align: left; color: #888; font-weight: normal; padding: 4px 8px; border-bottom: 1px solid #444; font-size: 11px; }
+        #playlist-table td { padding: 5px 8px; border-bottom: 1px solid #333; }
+        #playlist-table tr.active { background: #2a3a2a; }
+        #playlist-table tr:hover { background: #333; }
+        .playlist-actions { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+        .playlist-actions input { flex: 1; }
+        .mirror-name { color: #6af; }
+        .move-btns { display: flex; flex-direction: column; gap: 1px; }
+        .move-btns button { padding: 0 4px; font-size: 10px; line-height: 14px; }
+
+        /* === TRANSPORT === */
+        #transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #transport .now-playing { font-size: 13px; flex: 1; }
+        #transport .now-playing .anim-name { color: #0f0; font-weight: bold; }
+        #transport .now-playing .position { color: #888; }
+
+        /* === LOG === */
+        #log { font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; background: #111; border: 1px solid #333; padding: 8px; max-height: 150px; overflow-y: auto; border-radius: 2px; }
+        .log-entry { padding: 1px 0; }
+        .log-ok { color: #0c0; }
+        .log-err { color: #f44; }
+        .log-info { color: #888; }
+        .log-cmd { color: #8cf; }
+
+        /* === LIBRARY PANEL === */
+        #library-panel { width: 280px; min-width: 280px; background: #1e1e2a; border-right: 1px solid #444; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        #library-panel.collapsed { display: none; }
+        .lib-search { width: 100%; }
+        .lib-filter-row { display: flex; gap: 6px; align-items: center; }
+        .lib-filter-row select { flex: 1; }
+        .lib-list { flex: 1; overflow-y: auto; min-height: 100px; }
+        .lib-item { display: flex; align-items: center; gap: 5px; padding: 4px 8px; background: #2a2a3a; border: 1px solid #3a3a4a; border-radius: 3px; margin-bottom: 3px; font-size: 12px; cursor: grab; }
+        .lib-item:hover { background: #333348; border-color: #4a4a5a; }
+        .lib-item.dragging { opacity: 0.4; }
+        .lib-item .lib-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lib-item .lib-add { color: #2a6; cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+        .lib-item .lib-add:hover { color: #3c8; }
+        .lib-item .lib-remove { color: #a33; cursor: pointer; font-size: 14px; padding: 0 2px; }
+        .lib-item .lib-remove:hover { color: #f44; }
+        .lib-tags { display: flex; gap: 2px; flex-shrink: 0; }
+        .lib-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .lib-count { font-size: 10px; color: #888; text-align: right; }
+
+        /* === TAG PILLS === */
+        .tag-pill { display: inline-block; padding: 1px 5px; border-radius: 8px; font-size: 9px; white-space: nowrap; }
+
+        /* === MODAL === */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #2a2a2a; border: 1px solid #555; border-radius: 6px; padding: 20px; width: 560px; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { margin-bottom: 12px; font-size: 14px; color: #eee; text-transform: none; letter-spacing: 0; }
+        .modal textarea { width: 100%; height: 240px; background: #111; color: #eee; border: 1px solid #555; padding: 8px; font-family: 'Consolas', monospace; font-size: 11px; border-radius: 2px; resize: vertical; }
+        .modal .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+        .modal .import-preview { margin-top: 8px; font-size: 11px; color: #888; max-height: 100px; overflow-y: auto; }
+
+        /* === SAVED PLAYLISTS BAR === */
+        .saved-pl-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .saved-pl-bar select { min-width: 150px; }
+        .saved-pl-bar .bar-label { font-size: 11px; color: #888; }
+
+        /* === DRAG DROP INDICATORS === */
+        #playlistBody tr.drop-above td { border-top: 2px solid #48f; }
+        #playlistBody tr.drop-below td { border-bottom: 2px solid #48f; }
+    </style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+    <h1>Mirror Sync Dance Controller v1.1</h1>
+    <div class="actions">
+        <button onclick="toggleLibraryPanel()">Library</button>
+        <button onclick="exportProject()">Export</button>
+        <button onclick="importProject()">Import</button>
+        <button onclick="newProject()">New</button>
+    </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="main">
+
+    <!-- LIBRARY PANEL -->
+    <div id="library-panel" class="collapsed">
+        <div class="section" style="padding:8px;">
+            <h3>Animation Library</h3>
+            <input type="text" class="lib-search" id="libSearchInput" placeholder="Search animations..." oninput="onLibrarySearch(this.value)">
+            <div class="lib-filter-row" style="margin-top:6px;">
+                <select id="libTagFilter" onchange="onLibraryTagFilter(this.value)">
+                    <option value="">All tags</option>
+                </select>
+            </div>
+            <div class="lib-count" id="libraryCount">0 animations</div>
+        </div>
+        <div class="lib-list" id="libraryList">
+            <div style="color:#555; font-size:11px; text-align:center; padding:20px;">Library is empty. Use Bulk Import or add animations below.</div>
+        </div>
+        <div class="section" style="padding:8px;">
+            <div style="display:flex; gap:4px; margin-bottom:4px;">
+                <input type="text" id="libAddName" placeholder="Animation name" style="flex:1;">
+            </div>
+            <div style="display:flex; gap:4px; margin-bottom:6px;">
+                <input type="text" id="libAddTag" placeholder="Tag / set name" style="flex:1;">
+                <button class="btn-small btn-primary" onclick="addToLibraryFromInput()">Add</button>
+            </div>
+            <div class="lib-actions">
+                <button class="btn-small" onclick="openBulkImport()">Bulk Import</button>
+                <button class="btn-small" onclick="addAllFilteredToPlaylist()">Add All to Playlist</button>
+                <button class="btn-small btn-danger" onclick="clearLibrary()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+
+        <!-- Connection -->
+        <div class="section">
+            <h3>Connection</h3>
+            <input type="text" id="urlInput" placeholder="Paste controller HTTP-in URL here">
+            <div class="conn-row">
+                <button class="btn-primary" onclick="connectToController()">Connect</button>
+                <span class="status-dot disconnected" id="statusDot"></span>
+                <span id="connStatus">Not connected</span>
+            </div>
+        </div>
+
+        <!-- Mirror Rules -->
+        <div class="section">
+            <h3>Mirror Rules</h3>
+            <div style="font-size:11px; color:#888; margin-bottom:6px;">Click to toggle rules. Controller tries each in order and uses the first match found in inventory.</div>
+            <div id="ruleToggles"></div>
+            <div class="rule-row" style="margin-top:6px;">
+                <input type="text" id="mirrorRuleInput" placeholder="Custom rule with {name}">
+                <button class="btn-small" onclick="addCustomRule()">Add</button>
+            </div>
+            <div style="margin-top:6px;">
+                <button class="btn-small btn-primary" onclick="sendMirrorRules()">Send to SL</button>
+            </div>
+            <div class="mirror-preview">
+                Preview: <input type="text" id="mirrorTestInput" placeholder="type anim name" value="dance1" style="width:90px;" oninput="updateMirrorPreview()">
+                <div id="mirrorPreviewResult" style="margin-top:2px;"></div>
+            </div>
+        </div>
+
+        <!-- Avatar Scanner -->
+        <div class="section">
+            <h3>Nearby Avatars</h3>
+            <button onclick="scanAvatars()" style="width:100%; margin-bottom:8px;">Scan Nearby Avatars</button>
+            <div class="avatar-list" id="avatarList">
+                <div style="color:#555; font-size:11px;">Click Scan to find nearby avatars</div>
+            </div>
+            <div class="scan-actions">
+                <button class="btn-small" onclick="addSelectedToGroup('A')">&#8594; Group A</button>
+                <button class="btn-small" onclick="addSelectedToGroup('B')">&#8594; Group B</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+        <!-- Groups -->
+        <div class="section">
+            <h3>Dance Groups</h3>
+            <div id="groups-container">
+                <div class="group-panel group-a">
+                    <h4>Group A &mdash; Original</h4>
+                    <div id="groupAList"></div>
+                </div>
+                <div class="group-panel group-b">
+                    <h4>Group B &mdash; Mirror</h4>
+                    <div id="groupBList"></div>
+                </div>
+            </div>
+            <div class="group-actions">
+                <button class="btn-small" onclick="autoAssignGroups()">Auto-Assign A/B</button>
+                <button class="btn-small btn-danger" onclick="releaseAll()">Release All</button>
+            </div>
+        </div>
+
+        <!-- Playlist -->
+        <div class="section">
+            <h3>Playlist</h3>
+            <div class="saved-pl-bar">
+                <span class="bar-label">Saved:</span>
+                <select id="savedPlaylistSelect">
+                    <option value="">— Select a playlist —</option>
+                </select>
+                <button class="btn-small" onclick="loadSavedPlaylist()">Load</button>
+                <button class="btn-small btn-primary" onclick="saveCurrentPlaylist()">Save</button>
+                <button class="btn-small" onclick="saveCurrentPlaylistAs()">Save As</button>
+                <button class="btn-small btn-danger" onclick="deleteSavedPlaylist()">Delete</button>
+                <button class="btn-small" onclick="exportPlaylistFile()">Export .json</button>
+                <button class="btn-small" onclick="importPlaylistFile()">Import .json</button>
+            </div>
+            <table id="playlist-table">
+                <thead>
+                    <tr>
+                        <th style="width:30px;">#</th>
+                        <th>Animation</th>
+                        <th>Mirror Name</th>
+                        <th style="width:50px;">Dur</th>
+                        <th style="width:55px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="playlistBody" ondragover="onPlaylistDragOver(event)" ondragleave="onPlaylistDragLeave(event)" ondrop="onPlaylistDrop(event)"></tbody>
+            </table>
+            <div class="playlist-actions">
+                <input type="text" id="addAnimInput" placeholder="Animation name">
+                <input type="number" id="addAnimDur" placeholder="Dur(s)" style="width:60px;" min="1" value="30">
+                <button class="btn-small btn-primary" onclick="addToPlaylist()">Add</button>
+                <button class="btn-small" onclick="clearPlaylist()">Clear</button>
+                <button class="btn-small btn-primary" onclick="sendPlaylist()">Send to SL</button>
+            </div>
+        </div>
+
+        <!-- Transport -->
+        <div class="section">
+            <h3>Transport</h3>
+            <div id="transport">
+                <button onclick="sendCommand('PREV')">&#9664;&#9664;</button>
+                <button class="btn-play" onclick="playDance()">&#9654; PLAY</button>
+                <button onclick="sendCommand('NEXT')">&#9654;&#9654;</button>
+                <button class="btn-stop" onclick="sendCommand('STOP')">&#9632; STOP</button>
+                <button class="btn-danger btn-small" onclick="sendCommand('RESET')">RESET</button>
+                <div class="now-playing">
+                    Now: <span class="anim-name" id="nowPlaying">-</span>
+                    <span class="position" id="playPosition"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log -->
+        <div class="section" style="flex: 1; display: flex; flex-direction: column;">
+            <h3>Log</h3>
+            <div id="log"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- BULK IMPORT MODAL -->
+<div class="modal-overlay" id="bulkImportModal">
+    <div class="modal">
+        <h3>Bulk Import Animations</h3>
+        <div style="font-size:11px; color:#888; margin-bottom:8px;">
+            Paste playlist text below. Lines starting with <code>=== Tag Name (N dances) ===</code> set the tag for animations that follow. Lines starting with <code>#</code> are ignored.
+        </div>
+        <textarea id="bulkImportText" placeholder="=== Bento Cabaret (16 dances) ===
+Bento Cabaret 1
+Bento Cabaret 2
+..." oninput="previewBulkImport()"></textarea>
+        <div class="import-preview" id="bulkImportPreview"></div>
+        <div class="modal-actions">
+            <button onclick="closeBulkImport()">Cancel</button>
+            <button class="btn-primary" onclick="executeBulkImport()">Import</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================================
+// STATE
+// ============================================================================
+
+const MAX_SLOTS = 8;
+const MAX_PER_GROUP = 4;
+
+const RULE_SEP = ';;';
+const DEFAULT_RULES = ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'];
+
+let state = {
+    version: 3,
+    controllerUrl: '',
+    mirrorRules: ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'],
+    slots: [],            // { slotNum, avatarKey, avatarName, group, hasPerms }
+    playlist: [],         // { name, duration }
+    playIdx: 0,
+    playing: false,
+    scannedAvatars: [],   // { key, name }
+    library: [],          // { id, name, tags:[], duration }
+    savedPlaylists: [],   // { id, name, items:[{name,duration}], createdAt, updatedAt }
+    libraryFilterTag: '',
+    librarySearchText: ''
+};
+
+function initState() {
+    state.slots = [];
+    state.playlist = [];
+    state.playIdx = 0;
+    state.playing = false;
+    state.scannedAvatars = [];
+    state.library = [];
+    state.savedPlaylists = [];
+    state.libraryFilterTag = '';
+    state.librarySearchText = '';
+}
+
+// ============================================================================
+// MIRROR RULES
+// ============================================================================
+
+function applyRule(rule, animName) {
+    return rule.replace(/\{name\}/g, animName);
+}
+
+// Returns the first rule's result (in-world the controller checks inventory)
+function getMirrorName(animName) {
+    if (state.mirrorRules.length === 0) return animName;
+    return applyRule(state.mirrorRules[0], animName);
+}
+
+// Returns all possible mirror names from all active rules
+function getAllMirrorNames(animName) {
+    return state.mirrorRules.map(r => applyRule(r, animName));
+}
+
+function renderRuleToggles() {
+    const container = document.getElementById('ruleToggles');
+    const presets = ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'];
+
+    let html = '';
+    // Show all known rules (presets + any custom ones in state)
+    const allRules = [...new Set([...presets, ...state.mirrorRules])];
+
+    allRules.forEach(rule => {
+        const isActive = state.mirrorRules.includes(rule);
+        const idx = state.mirrorRules.indexOf(rule);
+        const cls = isActive ? 'active' : 'inactive';
+        const num = isActive ? (idx + 1) + '.' : '';
+        const isCustom = !presets.includes(rule);
+
+        html += `<div class="rule-toggle ${cls}" onclick="toggleRule('${escAttr(rule)}')">
+            <span class="rule-num">${num}</span>
+            <span>${escHtml(rule)}</span>
+            ${isCustom ? `<span class="rule-remove" onclick="event.stopPropagation(); removeRule('${escAttr(rule)}')">&times;</span>` : ''}
+        </div>`;
+    });
+
+    container.innerHTML = html;
+    updateMirrorPreview();
+}
+
+function toggleRule(rule) {
+    const idx = state.mirrorRules.indexOf(rule);
+    if (idx !== -1) {
+        if (state.mirrorRules.length > 1) {
+            state.mirrorRules.splice(idx, 1);
+        } else {
+            logMessage('Cannot remove last rule', 'err');
+            return;
+        }
+    } else {
+        state.mirrorRules.push(rule);
+    }
+    renderRuleToggles();
+    renderPlaylist();
+    saveProject();
+}
+
+function removeRule(rule) {
+    const idx = state.mirrorRules.indexOf(rule);
+    if (idx !== -1 && state.mirrorRules.length > 1) {
+        state.mirrorRules.splice(idx, 1);
+    }
+    renderRuleToggles();
+    renderPlaylist();
+    saveProject();
+}
+
+function addCustomRule() {
+    const input = document.getElementById('mirrorRuleInput');
+    const rule = input.value.trim();
+    if (!rule || !rule.includes('{name}')) {
+        logMessage('Rule must contain {name} placeholder', 'err');
+        return;
+    }
+    if (!state.mirrorRules.includes(rule)) {
+        state.mirrorRules.push(rule);
+    }
+    input.value = '';
+    renderRuleToggles();
+    renderPlaylist();
+    saveProject();
+    logMessage('Added rule: ' + rule, 'ok');
+}
+
+function sendMirrorRules() {
+    const rulesStr = state.mirrorRules.join(RULE_SEP);
+    sendCommand('MIRROR|' + rulesStr);
+    logMessage('Sent ' + state.mirrorRules.length + ' mirror rules to controller', 'ok');
+}
+
+function updateMirrorPreview() {
+    const input = document.getElementById('mirrorTestInput').value || 'dance1';
+    const container = document.getElementById('mirrorPreviewResult');
+    if (state.mirrorRules.length === 0) {
+        container.innerHTML = '<span style="color:#888">No rules active</span>';
+        return;
+    }
+    const names = getAllMirrorNames(input);
+    container.innerHTML = names.map((n, i) =>
+        `<span style="color:#8cf">${escHtml(n)}</span><span style="color:#555; font-size:10px;"> (rule ${i+1})</span>`
+    ).join('<br>');
+}
+
+function escAttr(str) {
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ============================================================================
+// HTTP COMMUNICATION
+// ============================================================================
+
+async function sendCommand(command) {
+    if (!state.controllerUrl) {
+        logMessage('No controller URL set', 'err');
+        return;
+    }
+
+    try {
+        await fetch(state.controllerUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: command
+        });
+        logMessage('Sent: ' + command, 'cmd');
+
+        // Update local state optimistically
+        if (command === 'PLAY') {
+            state.playing = true;
+            updateTransport();
+        } else if (command === 'STOP') {
+            state.playing = false;
+            updateTransport();
+        } else if (command === 'NEXT') {
+            if (state.playlist.length > 0) {
+                state.playIdx = (state.playIdx + 1) % state.playlist.length;
+                state.playing = true;
+                updateTransport();
+                renderPlaylist();
+            }
+        } else if (command === 'PREV') {
+            if (state.playlist.length > 0) {
+                state.playIdx = (state.playIdx - 1 + state.playlist.length) % state.playlist.length;
+                state.playing = true;
+                updateTransport();
+                renderPlaylist();
+            }
+        } else if (command === 'RESET') {
+            state.playing = false;
+            state.playIdx = 0;
+            state.slots = [];
+            renderGroups();
+            updateTransport();
+            renderPlaylist();
+        }
+    } catch (e) {
+        logMessage('Send failed: ' + e.message, 'err');
+    }
+}
+
+async function connectToController() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) {
+        logMessage('Please enter a controller URL', 'err');
+        return;
+    }
+    state.controllerUrl = url;
+    saveProject();
+
+    const dot = document.getElementById('statusDot');
+    const status = document.getElementById('connStatus');
+
+    // Send a STATUS command to test connection (no-cors so we can't read response, but no error = likely ok)
+    try {
+        await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: 'STATUS'
+        });
+        dot.className = 'status-dot connected';
+        status.textContent = 'Connected';
+        logMessage('Connected to controller', 'ok');
+
+        // Also send current mirror rules
+        sendMirrorRules();
+    } catch (e) {
+        dot.className = 'status-dot error';
+        status.textContent = 'Error: ' + e.message;
+        logMessage('Connection failed: ' + e.message, 'err');
+    }
+}
+
+// ============================================================================
+// AVATAR SCANNING
+// ============================================================================
+
+function scanAvatars() {
+    sendCommand('SCAN');
+    logMessage('Scan request sent — use in-world menu to see results, or add avatars manually below', 'info');
+
+    // Since no-cors prevents reading responses, provide manual entry
+    showManualAvatarEntry();
+}
+
+function showManualAvatarEntry() {
+    const list = document.getElementById('avatarList');
+    list.innerHTML = `
+        <div style="font-size:11px; color:#aaa; margin-bottom:6px;">
+            Scan sent to SL. Add avatars manually or use in-world touch menu:
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:4px;">
+            <input type="text" id="manualAvName" placeholder="Avatar name" style="flex:1;">
+        </div>
+        <div style="display:flex; gap:4px;">
+            <input type="text" id="manualAvKey" placeholder="Avatar UUID (key)" style="flex:1;">
+            <button class="btn-small" onclick="addManualAvatar()">Add</button>
+        </div>
+    `;
+
+    // Also render any previously scanned avatars
+    if (state.scannedAvatars.length > 0) {
+        renderScannedAvatars();
+    }
+}
+
+function addManualAvatar() {
+    const name = document.getElementById('manualAvName').value.trim();
+    const key = document.getElementById('manualAvKey').value.trim();
+    if (!name || !key) {
+        logMessage('Enter both avatar name and UUID key', 'err');
+        return;
+    }
+
+    // Check if already in scanned list
+    if (state.scannedAvatars.find(a => a.key === key)) {
+        logMessage(name + ' already in list', 'info');
+        return;
+    }
+
+    state.scannedAvatars.push({ key, name });
+    renderScannedAvatars();
+    document.getElementById('manualAvName').value = '';
+    document.getElementById('manualAvKey').value = '';
+    logMessage('Added ' + name + ' to avatar list', 'ok');
+}
+
+function renderScannedAvatars() {
+    const list = document.getElementById('avatarList');
+    // Keep manual entry at top
+    let html = `
+        <div style="display:flex; gap:4px; margin-bottom:4px;">
+            <input type="text" id="manualAvName" placeholder="Avatar name" style="flex:1;">
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+            <input type="text" id="manualAvKey" placeholder="Avatar UUID (key)" style="flex:1;">
+            <button class="btn-small" onclick="addManualAvatar()">Add</button>
+        </div>
+    `;
+
+    state.scannedAvatars.forEach((av, i) => {
+        const assigned = state.slots.find(s => s.avatarKey === av.key);
+        html += `<div class="avatar-item">
+            <input type="checkbox" class="av-check" data-idx="${i}" ${assigned ? 'disabled' : ''}>
+            <span>${escHtml(av.name)}</span>
+            ${assigned ? '<span class="assigned-tag">Group ' + assigned.group + '</span>' : ''}
+        </div>`;
+    });
+
+    list.innerHTML = html;
+}
+
+function addSelectedToGroup(group) {
+    const checks = document.querySelectorAll('.av-check:checked');
+    if (checks.length === 0) {
+        logMessage('Select avatars first', 'info');
+        return;
+    }
+
+    const currentGroupCount = state.slots.filter(s => s.group === group).length;
+    let added = 0;
+
+    checks.forEach(cb => {
+        if (currentGroupCount + added >= MAX_PER_GROUP) {
+            logMessage('Group ' + group + ' is full (max ' + MAX_PER_GROUP + ')', 'err');
+            return;
+        }
+
+        const idx = parseInt(cb.dataset.idx);
+        const av = state.scannedAvatars[idx];
+        if (!av) return;
+        if (state.slots.find(s => s.avatarKey === av.key)) return; // already assigned
+
+        const slotNum = findEmptySlot();
+        if (slotNum === 0) {
+            logMessage('All slots full', 'err');
+            return;
+        }
+
+        state.slots.push({
+            slotNum,
+            avatarKey: av.key,
+            avatarName: av.name,
+            group,
+            hasPerms: false
+        });
+
+        sendCommand('INVITE|' + av.key + '|' + group);
+        added++;
+    });
+
+    if (added > 0) {
+        logMessage('Added ' + added + ' avatar(s) to Group ' + group, 'ok');
+        renderGroups();
+        renderScannedAvatars();
+        saveProject();
+    }
+}
+
+function findEmptySlot() {
+    for (let i = 1; i <= MAX_SLOTS; i++) {
+        if (!state.slots.find(s => s.slotNum === i)) return i;
+    }
+    return 0;
+}
+
+// ============================================================================
+// GROUP MANAGEMENT
+// ============================================================================
+
+function renderGroups() {
+    const groupA = document.getElementById('groupAList');
+    const groupB = document.getElementById('groupBList');
+
+    const slotsA = state.slots.filter(s => s.group === 'A');
+    const slotsB = state.slots.filter(s => s.group === 'B');
+
+    groupA.innerHTML = renderGroupSlots(slotsA, 'A');
+    groupB.innerHTML = renderGroupSlots(slotsB, 'B');
+}
+
+function renderGroupSlots(slots, group) {
+    if (slots.length === 0) {
+        return '<div class="empty-slot">No dancers assigned</div>';
+    }
+
+    return slots.map(s => `
+        <div class="group-member">
+            <span class="slot-num">#${s.slotNum}</span>
+            <span class="name">${escHtml(s.avatarName)}</span>
+            <button class="btn-small" onclick="moveToOtherGroup(${s.slotNum})" title="Move to Group ${group === 'A' ? 'B' : 'A'}">${group === 'A' ? '&rarr;' : '&larr;'}</button>
+            <button class="btn-small btn-danger" onclick="removeFromGroup(${s.slotNum})" title="Remove">&times;</button>
+        </div>
+    `).join('');
+}
+
+function moveToOtherGroup(slotNum) {
+    const slot = state.slots.find(s => s.slotNum === slotNum);
+    if (!slot) return;
+
+    const newGroup = slot.group === 'A' ? 'B' : 'A';
+
+    // Check target group capacity
+    const targetCount = state.slots.filter(s => s.group === newGroup).length;
+    if (targetCount >= MAX_PER_GROUP) {
+        logMessage('Group ' + newGroup + ' is full', 'err');
+        return;
+    }
+
+    slot.group = newGroup;
+    sendCommand('SETGROUP|' + slotNum + '|' + newGroup);
+    renderGroups();
+    renderScannedAvatars();
+    saveProject();
+    logMessage('Moved ' + slot.avatarName + ' to Group ' + newGroup, 'ok');
+}
+
+function removeFromGroup(slotNum) {
+    const idx = state.slots.findIndex(s => s.slotNum === slotNum);
+    if (idx === -1) return;
+
+    const name = state.slots[idx].avatarName;
+    state.slots.splice(idx, 1);
+    sendCommand('REMOVE|' + slotNum);
+    renderGroups();
+    renderScannedAvatars();
+    saveProject();
+    logMessage('Removed ' + name, 'ok');
+}
+
+function autoAssignGroups() {
+    let toggle = 'A';
+    state.slots.forEach(s => {
+        s.group = toggle;
+        sendCommand('SETGROUP|' + s.slotNum + '|' + toggle);
+        toggle = toggle === 'A' ? 'B' : 'A';
+    });
+    renderGroups();
+    saveProject();
+    logMessage('Auto-assigned dancers alternating A/B', 'ok');
+}
+
+function releaseAll() {
+    if (state.slots.length === 0) return;
+    sendCommand('RESET');
+    state.slots = [];
+    state.playing = false;
+    state.playIdx = 0;
+    renderGroups();
+    renderScannedAvatars();
+    updateTransport();
+    renderPlaylist();
+    saveProject();
+    logMessage('Released all dancers', 'ok');
+}
+
+// ============================================================================
+// ANIMATION LIBRARY
+// ============================================================================
+
+function toggleLibraryPanel() {
+    document.getElementById('library-panel').classList.toggle('collapsed');
+}
+
+function onLibrarySearch(text) {
+    state.librarySearchText = text;
+    renderLibrary();
+}
+
+function onLibraryTagFilter(tag) {
+    state.libraryFilterTag = tag;
+    // Auto-fill the tag input with current filter
+    const tagInput = document.getElementById('libAddTag');
+    if (tagInput) tagInput.value = tag;
+    renderLibrary();
+}
+
+function getUniqueTags() {
+    const tags = new Set();
+    state.library.forEach(item => item.tags.forEach(t => tags.add(t)));
+    return [...tags].sort();
+}
+
+function getFilteredLibrary() {
+    let items = state.library;
+    const tag = state.libraryFilterTag;
+    const search = state.librarySearchText.toLowerCase();
+    if (tag) items = items.filter(item => item.tags.includes(tag));
+    if (search) items = items.filter(item => item.name.toLowerCase().includes(search));
+    return items;
+}
+
+function renderTagFilter() {
+    const select = document.getElementById('libTagFilter');
+    const tags = getUniqueTags();
+    const current = state.libraryFilterTag;
+    select.innerHTML = '<option value="">All tags (' + state.library.length + ')</option>' +
+        tags.map(t => {
+            const count = state.library.filter(item => item.tags.includes(t)).length;
+            return '<option value="' + escAttr(t) + '"' + (t === current ? ' selected' : '') + '>' + escHtml(t) + ' (' + count + ')</option>';
+        }).join('');
+}
+
+function renderLibrary() {
+    const container = document.getElementById('libraryList');
+    const countEl = document.getElementById('libraryCount');
+    const filtered = getFilteredLibrary();
+    countEl.textContent = filtered.length + ' / ' + state.library.length + ' animations';
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div style="color:#555; font-size:11px; text-align:center; padding:20px;">' +
+            (state.library.length === 0 ? 'Library is empty. Use Bulk Import or add animations below.' : 'No matches for current filter.') + '</div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(item => {
+        const tags = item.tags.map(t =>
+            '<span class="tag-pill" style="background:' + tagColor(t) + ';color:' + tagTextColor(t) + '">' + escHtml(t) + '</span>'
+        ).join('');
+        return '<div class="lib-item" draggable="true" ondragstart="onLibDragStart(event, \'' + escAttr(item.id) + '\')" ondragend="onLibDragEnd(event)" ondblclick="addLibItemToPlaylist(\'' + escAttr(item.id) + '\')">' +
+            '<span class="lib-tags">' + tags + '</span>' +
+            '<span class="lib-name" title="' + escAttr(item.name) + '">' + escHtml(item.name) + '</span>' +
+            '<span class="lib-add" onclick="event.stopPropagation(); addLibItemToPlaylist(\'' + escAttr(item.id) + '\')" title="Add to playlist">+</span>' +
+            '<span class="lib-remove" onclick="event.stopPropagation(); removeFromLibrary(\'' + escAttr(item.id) + '\')" title="Remove">&times;</span>' +
+            '</div>';
+    }).join('');
+}
+
+function addToLibraryFromInput() {
+    const nameInput = document.getElementById('libAddName');
+    const tagInput = document.getElementById('libAddTag');
+    const name = nameInput.value.trim();
+    if (!name) { logMessage('Enter an animation name', 'err'); return; }
+
+    const tag = tagInput.value.trim();
+    const existing = state.library.find(item => item.name === name);
+    if (existing) {
+        if (tag && !existing.tags.includes(tag)) {
+            existing.tags.push(tag);
+            logMessage('Added tag "' + tag + '" to existing "' + name + '"', 'ok');
+        } else {
+            logMessage('"' + name + '" already in library', 'info');
+        }
+    } else {
+        state.library.push({
+            id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            name: name,
+            tags: tag ? [tag] : [],
+            duration: 30
+        });
+        logMessage('Added "' + name + '" to library', 'ok');
+    }
+    nameInput.value = '';
+    renderLibrary();
+    renderTagFilter();
+    saveProject();
+}
+
+function removeFromLibrary(id) {
+    state.library = state.library.filter(item => item.id !== id);
+    renderLibrary();
+    renderTagFilter();
+    saveProject();
+}
+
+function addLibItemToPlaylist(id) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    state.playlist.push({ name: item.name, duration: item.duration || 30 });
+    renderPlaylist();
+    updateTransport();
+    saveProject();
+    logMessage('Added "' + item.name + '" to playlist', 'ok');
+}
+
+function addAllFilteredToPlaylist() {
+    const filtered = getFilteredLibrary();
+    if (filtered.length === 0) { logMessage('No animations to add', 'info'); return; }
+    filtered.forEach(item => {
+        state.playlist.push({ name: item.name, duration: item.duration || 30 });
+    });
+    renderPlaylist();
+    updateTransport();
+    saveProject();
+    logMessage('Added ' + filtered.length + ' animations to playlist', 'ok');
+}
+
+function clearLibrary() {
+    if (state.library.length === 0) return;
+    if (!confirm('Clear all ' + state.library.length + ' animations from library?')) return;
+    state.library = [];
+    state.libraryFilterTag = '';
+    state.librarySearchText = '';
+    document.getElementById('libSearchInput').value = '';
+    renderLibrary();
+    renderTagFilter();
+    saveProject();
+    logMessage('Library cleared', 'ok');
+}
+
+// ============================================================================
+// BULK IMPORT
+// ============================================================================
+
+function openBulkImport() {
+    document.getElementById('bulkImportText').value = '';
+    document.getElementById('bulkImportPreview').innerHTML = '';
+    document.getElementById('bulkImportModal').classList.add('active');
+}
+
+function closeBulkImport() {
+    document.getElementById('bulkImportModal').classList.remove('active');
+}
+
+function parseBulkText(text) {
+    const lines = text.split('\n');
+    const result = [];
+    let currentTag = '';
+    const headerRegex = /^===\s*(.+?)\s*(?:\(\d+\s*dances?\))?\s*===$/;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const match = trimmed.match(headerRegex);
+        if (match) {
+            currentTag = match[1].trim();
+            continue;
+        }
+        result.push({ name: trimmed, tag: currentTag });
+    }
+    return result;
+}
+
+function previewBulkImport() {
+    const text = document.getElementById('bulkImportText').value;
+    const parsed = parseBulkText(text);
+    const preview = document.getElementById('bulkImportPreview');
+    if (parsed.length === 0) {
+        preview.innerHTML = '';
+        return;
+    }
+    const tags = {};
+    parsed.forEach(p => {
+        const t = p.tag || '(no tag)';
+        tags[t] = (tags[t] || 0) + 1;
+    });
+    const tagList = Object.entries(tags).map(([t, c]) => escHtml(t) + ': ' + c).join(', ');
+    preview.innerHTML = 'Found <b>' + parsed.length + '</b> animations in <b>' + Object.keys(tags).length + '</b> sets: ' + tagList;
+}
+
+function executeBulkImport() {
+    const text = document.getElementById('bulkImportText').value;
+    const parsed = parseBulkText(text);
+    if (parsed.length === 0) { logMessage('Nothing to import', 'info'); return; }
+
+    let added = 0, tagUpdates = 0;
+    parsed.forEach(p => {
+        const existing = state.library.find(item => item.name === p.name);
+        if (existing) {
+            if (p.tag && !existing.tags.includes(p.tag)) {
+                existing.tags.push(p.tag);
+                tagUpdates++;
+            }
+        } else {
+            state.library.push({
+                id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + added,
+                name: p.name,
+                tags: p.tag ? [p.tag] : [],
+                duration: 30
+            });
+            added++;
+        }
+    });
+
+    closeBulkImport();
+    renderLibrary();
+    renderTagFilter();
+    saveProject();
+    logMessage('Bulk import: ' + added + ' new, ' + tagUpdates + ' tag updates', 'ok');
+}
+
+// ============================================================================
+// DRAG AND DROP
+// ============================================================================
+
+let draggedLibItem = null;
+
+function onLibDragStart(event, itemId) {
+    draggedLibItem = state.library.find(item => item.id === itemId);
+    if (!draggedLibItem) return;
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('text/plain', draggedLibItem.name);
+    event.target.classList.add('dragging');
+}
+
+function onLibDragEnd(event) {
+    event.target.classList.remove('dragging');
+    draggedLibItem = null;
+    document.querySelectorAll('#playlistBody tr').forEach(tr => {
+        tr.classList.remove('drop-above', 'drop-below');
+    });
+}
+
+function onPlaylistDragOver(event) {
+    if (!draggedLibItem) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+
+    const rows = [...document.querySelectorAll('#playlistBody tr[data-idx]')];
+    rows.forEach(tr => tr.classList.remove('drop-above', 'drop-below'));
+    if (rows.length === 0) return;
+
+    for (const row of rows) {
+        const rect = row.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (event.clientY < midY) {
+            row.classList.add('drop-above');
+            return;
+        }
+    }
+    rows[rows.length - 1].classList.add('drop-below');
+}
+
+function onPlaylistDragLeave(event) {
+    const tbody = document.getElementById('playlistBody');
+    if (!tbody.contains(event.relatedTarget)) {
+        document.querySelectorAll('#playlistBody tr').forEach(tr => {
+            tr.classList.remove('drop-above', 'drop-below');
+        });
+    }
+}
+
+function onPlaylistDrop(event) {
+    if (!draggedLibItem) return;
+    event.preventDefault();
+
+    const item = { name: draggedLibItem.name, duration: draggedLibItem.duration || 30 };
+    const rows = [...document.querySelectorAll('#playlistBody tr[data-idx]')];
+    let insertIdx = state.playlist.length;
+
+    for (let i = 0; i < rows.length; i++) {
+        if (rows[i].classList.contains('drop-above')) { insertIdx = i; break; }
+        if (rows[i].classList.contains('drop-below')) { insertIdx = i + 1; break; }
+    }
+
+    state.playlist.splice(insertIdx, 0, item);
+    rows.forEach(tr => tr.classList.remove('drop-above', 'drop-below'));
+    draggedLibItem = null;
+
+    renderPlaylist();
+    updateTransport();
+    saveProject();
+    logMessage('Added "' + item.name + '" to playlist at position ' + (insertIdx + 1), 'ok');
+}
+
+// ============================================================================
+// PLAYLIST
+// ============================================================================
+
+function renderPlaylist() {
+    const tbody = document.getElementById('playlistBody');
+
+    if (state.playlist.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#555; text-align:center;">No animations in playlist</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = state.playlist.map((item, i) => {
+        const mirrorNames = getAllMirrorNames(item.name);
+        const mirrorDisplay = mirrorNames.map(n => escHtml(n)).join(' / ');
+        const isActive = i === state.playIdx;
+        return `<tr class="${isActive ? 'active' : ''}" data-idx="${i}">
+            <td>${i + 1}</td>
+            <td>${escHtml(item.name)}</td>
+            <td class="mirror-name" title="${mirrorNames.join('\n')}">${mirrorDisplay}</td>
+            <td>${item.duration}s</td>
+            <td>
+                <div class="move-btns" style="display:inline-flex; gap:2px;">
+                    <button class="btn-small" onclick="movePlaylistItem(${i}, -1)" title="Move up">&uarr;</button>
+                    <button class="btn-small" onclick="movePlaylistItem(${i}, 1)" title="Move down">&darr;</button>
+                    <button class="btn-small btn-danger" onclick="removePlaylistItem(${i})" title="Remove">&times;</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function addToPlaylist() {
+    const nameInput = document.getElementById('addAnimInput');
+    const durInput = document.getElementById('addAnimDur');
+    const name = nameInput.value.trim();
+    const dur = parseInt(durInput.value) || 30;
+
+    if (!name) {
+        logMessage('Enter an animation name', 'err');
+        return;
+    }
+
+    state.playlist.push({ name, duration: dur });
+    nameInput.value = '';
+    renderPlaylist();
+    saveProject();
+    logMessage('Added "' + name + '" to playlist', 'ok');
+}
+
+function removePlaylistItem(idx) {
+    state.playlist.splice(idx, 1);
+    if (state.playIdx >= state.playlist.length) state.playIdx = 0;
+    renderPlaylist();
+    updateTransport();
+    saveProject();
+}
+
+function movePlaylistItem(idx, direction) {
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= state.playlist.length) return;
+
+    const item = state.playlist.splice(idx, 1)[0];
+    state.playlist.splice(newIdx, 0, item);
+
+    // Adjust playIdx if needed
+    if (state.playIdx === idx) state.playIdx = newIdx;
+    else if (state.playIdx === newIdx) state.playIdx = idx;
+
+    renderPlaylist();
+    saveProject();
+}
+
+function clearPlaylist() {
+    state.playlist = [];
+    state.playIdx = 0;
+    renderPlaylist();
+    updateTransport();
+    saveProject();
+    logMessage('Playlist cleared', 'ok');
+}
+
+function sendPlaylist() {
+    if (state.playlist.length === 0) {
+        logMessage('Playlist is empty', 'err');
+        return;
+    }
+
+    const names = state.playlist.map(p => p.name).join('|');
+    sendCommand('PLAYLIST|' + names);
+    logMessage('Sent playlist (' + state.playlist.length + ' dances) to controller', 'ok');
+}
+
+async function playDance() {
+    if (state.playlist.length === 0) {
+        logMessage('Playlist is empty — add animations first', 'err');
+        return;
+    }
+    // Send current playlist to controller, then start playback
+    const names = state.playlist.map(p => p.name).join('|');
+    await sendCommand('PLAYLIST|' + names);
+    logMessage('Sent playlist (' + state.playlist.length + ' dances) to controller', 'ok');
+    sendCommand('PLAY');
+}
+
+// ============================================================================
+// TRANSPORT
+// ============================================================================
+
+function updateTransport() {
+    const nowPlaying = document.getElementById('nowPlaying');
+    const position = document.getElementById('playPosition');
+
+    if (state.playlist.length === 0) {
+        nowPlaying.textContent = '-';
+        position.textContent = '';
+        return;
+    }
+
+    const current = state.playlist[state.playIdx];
+    if (state.playing && current) {
+        nowPlaying.textContent = current.name;
+        position.textContent = '(' + (state.playIdx + 1) + '/' + state.playlist.length + ')';
+    } else if (current) {
+        nowPlaying.textContent = current.name + ' (stopped)';
+        position.textContent = '(' + (state.playIdx + 1) + '/' + state.playlist.length + ')';
+    } else {
+        nowPlaying.textContent = '-';
+        position.textContent = '';
+    }
+}
+
+// ============================================================================
+// LOG
+// ============================================================================
+
+function logMessage(text, type) {
+    const log = document.getElementById('log');
+    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const cls = 'log-' + (type || 'info');
+    log.innerHTML += `<div class="log-entry ${cls}">${time} ${escHtml(text)}</div>`;
+    log.scrollTop = log.scrollHeight;
+}
+
+// ============================================================================
+// SAVED PLAYLISTS
+// ============================================================================
+
+function renderSavedPlaylistSelect() {
+    const select = document.getElementById('savedPlaylistSelect');
+    select.innerHTML = '<option value="">— Select a playlist —</option>' +
+        state.savedPlaylists.map(sp =>
+            '<option value="' + escAttr(sp.id) + '">' + escHtml(sp.name) + ' (' + sp.items.length + ')</option>'
+        ).join('');
+}
+
+function loadSavedPlaylist() {
+    const select = document.getElementById('savedPlaylistSelect');
+    const id = select.value;
+    if (!id) { logMessage('Select a saved playlist first', 'info'); return; }
+    const sp = state.savedPlaylists.find(p => p.id === id);
+    if (!sp) return;
+    state.playlist = sp.items.map(item => ({ ...item }));
+    state.playIdx = 0;
+    state.playing = false;
+    renderPlaylist();
+    updateTransport();
+    saveProject();
+    logMessage('Loaded playlist "' + sp.name + '" (' + sp.items.length + ' dances)', 'ok');
+}
+
+function saveCurrentPlaylist() {
+    const select = document.getElementById('savedPlaylistSelect');
+    const id = select.value;
+    if (!id) { saveCurrentPlaylistAs(); return; }
+    const sp = state.savedPlaylists.find(p => p.id === id);
+    if (!sp) return;
+    sp.items = state.playlist.map(item => ({ ...item }));
+    sp.updatedAt = new Date().toISOString();
+    renderSavedPlaylistSelect();
+    select.value = id;
+    saveProject();
+    logMessage('Saved over "' + sp.name + '"', 'ok');
+}
+
+function saveCurrentPlaylistAs() {
+    if (state.playlist.length === 0) { logMessage('Playlist is empty', 'err'); return; }
+    const name = prompt('Save playlist as:');
+    if (!name || !name.trim()) return;
+    const sp = {
+        id: 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        name: name.trim(),
+        items: state.playlist.map(item => ({ ...item })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    state.savedPlaylists.push(sp);
+    renderSavedPlaylistSelect();
+    document.getElementById('savedPlaylistSelect').value = sp.id;
+    saveProject();
+    logMessage('Saved playlist as "' + sp.name + '"', 'ok');
+}
+
+function deleteSavedPlaylist() {
+    const select = document.getElementById('savedPlaylistSelect');
+    const id = select.value;
+    if (!id) { logMessage('Select a saved playlist first', 'info'); return; }
+    const sp = state.savedPlaylists.find(p => p.id === id);
+    if (!sp) return;
+    if (!confirm('Delete saved playlist "' + sp.name + '"?')) return;
+    state.savedPlaylists = state.savedPlaylists.filter(p => p.id !== id);
+    renderSavedPlaylistSelect();
+    saveProject();
+    logMessage('Deleted saved playlist "' + sp.name + '"', 'ok');
+}
+
+function exportPlaylistFile() {
+    const select = document.getElementById('savedPlaylistSelect');
+    const id = select.value;
+    const data = id ? state.savedPlaylists.find(p => p.id === id) : { name: 'current-playlist', items: state.playlist };
+    if (!data || !data.items || data.items.length === 0) { logMessage('No playlist to export', 'err'); return; }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (data.name || 'playlist') + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    logMessage('Exported playlist "' + data.name + '"', 'ok');
+}
+
+function importPlaylistFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function () {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+            try {
+                const data = JSON.parse(reader.result);
+                if (!data.items || !Array.isArray(data.items)) { logMessage('Invalid playlist file', 'err'); return; }
+                const sp = {
+                    id: 'sp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    name: data.name || file.name.replace('.json', ''),
+                    items: data.items,
+                    createdAt: data.createdAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                state.savedPlaylists.push(sp);
+                renderSavedPlaylistSelect();
+                document.getElementById('savedPlaylistSelect').value = sp.id;
+                saveProject();
+                logMessage('Imported playlist "' + sp.name + '" (' + sp.items.length + ' dances)', 'ok');
+            } catch (e) { logMessage('Import failed: ' + e.message, 'err'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+// ============================================================================
+// PROJECT PERSISTENCE
+// ============================================================================
+
+const STORAGE_KEY = 'mirrorSyncProject';
+
+function saveProject() {
+    try {
+        const data = {
+            version: state.version,
+            controllerUrl: state.controllerUrl,
+            mirrorRules: state.mirrorRules,
+            slots: state.slots,
+            playlist: state.playlist,
+            playIdx: state.playIdx,
+            scannedAvatars: state.scannedAvatars,
+            library: state.library,
+            savedPlaylists: state.savedPlaylists
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* storage full or unavailable */ }
+}
+
+function loadProject() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const data = JSON.parse(raw);
+        state.version = 3;
+        state.controllerUrl = data.controllerUrl || '';
+        // Migrate from v1 (single rule) to v2+ (multiple rules)
+        if (data.mirrorRules) {
+            state.mirrorRules = data.mirrorRules;
+        } else if (data.mirrorRule) {
+            state.mirrorRules = [data.mirrorRule];
+        } else {
+            state.mirrorRules = [...DEFAULT_RULES];
+        }
+        state.slots = data.slots || [];
+        state.playlist = data.playlist || [];
+        state.playIdx = data.playIdx || 0;
+        state.playing = false;
+        state.scannedAvatars = data.scannedAvatars || [];
+        // v3 fields (graceful migration from v1/v2)
+        state.library = data.library || [];
+        state.savedPlaylists = data.savedPlaylists || [];
+        state.libraryFilterTag = '';
+        state.librarySearchText = '';
+
+        // Restore UI
+        document.getElementById('urlInput').value = state.controllerUrl;
+        renderRuleToggles();
+        renderGroups();
+        renderPlaylist();
+        updateTransport();
+        renderLibrary();
+        renderTagFilter();
+        renderSavedPlaylistSelect();
+        if (state.scannedAvatars.length > 0) renderScannedAvatars();
+
+        if (state.controllerUrl) {
+            document.getElementById('statusDot').className = 'status-dot connected';
+            document.getElementById('connStatus').textContent = 'URL loaded (reconnect to verify)';
+        }
+
+        logMessage('Project restored from local storage', 'info');
+    } catch (e) {
+        logMessage('Could not load saved project: ' + e.message, 'err');
+    }
+}
+
+function exportProject() {
+    const data = {
+        version: state.version,
+        mirrorRules: state.mirrorRules,
+        slots: state.slots,
+        playlist: state.playlist,
+        scannedAvatars: state.scannedAvatars,
+        library: state.library,
+        savedPlaylists: state.savedPlaylists
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mirror-sync-project.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    logMessage('Project exported', 'ok');
+}
+
+function importProject() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function () {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+            try {
+                const data = JSON.parse(reader.result);
+                if (data.mirrorRules) {
+                    state.mirrorRules = data.mirrorRules;
+                } else if (data.mirrorRule) {
+                    state.mirrorRules = [data.mirrorRule];
+                } else {
+                    state.mirrorRules = [...DEFAULT_RULES];
+                }
+                state.slots = data.slots || [];
+                state.playlist = data.playlist || [];
+                state.playIdx = 0;
+                state.playing = false;
+                state.scannedAvatars = data.scannedAvatars || [];
+                state.library = data.library || [];
+                state.savedPlaylists = data.savedPlaylists || [];
+                state.libraryFilterTag = '';
+                state.librarySearchText = '';
+
+                renderRuleToggles();
+                renderGroups();
+                renderPlaylist();
+                updateTransport();
+                renderLibrary();
+                renderTagFilter();
+                renderSavedPlaylistSelect();
+                if (state.scannedAvatars.length > 0) renderScannedAvatars();
+                saveProject();
+                logMessage('Project imported successfully', 'ok');
+            } catch (e) {
+                logMessage('Import failed: ' + e.message, 'err');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function newProject() {
+    if (!confirm('Start a new project? Current state will be cleared.')) return;
+    initState();
+    document.getElementById('urlInput').value = '';
+    state.mirrorRules = [...DEFAULT_RULES];
+    document.getElementById('mirrorRuleInput').value = '';
+    document.getElementById('statusDot').className = 'status-dot disconnected';
+    document.getElementById('connStatus').textContent = 'Not connected';
+    document.getElementById('avatarList').innerHTML = '<div style="color:#555; font-size:11px;">Click Scan to find nearby avatars</div>';
+    document.getElementById('libSearchInput').value = '';
+    renderRuleToggles();
+    renderGroups();
+    renderPlaylist();
+    updateTransport();
+    renderLibrary();
+    renderTagFilter();
+    renderSavedPlaylistSelect();
+    document.getElementById('log').innerHTML = '';
+    saveProject();
+    logMessage('New project started', 'info');
+}
+
+// ============================================================================
+// UTILITY
+// ============================================================================
+
+function escHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function tagColor(tag) {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) hash = ((hash << 5) - hash) + tag.charCodeAt(i);
+    return 'hsl(' + (Math.abs(hash) % 360) + ', 35%, 28%)';
+}
+
+function tagTextColor(tag) {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) hash = ((hash << 5) - hash) + tag.charCodeAt(i);
+    return 'hsl(' + (Math.abs(hash) % 360) + ', 55%, 72%)';
+}
+
+// Allow Enter key in inputs
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        if (document.activeElement.id === 'addAnimInput') addToPlaylist();
+        else if (document.activeElement.id === 'libAddName' || document.activeElement.id === 'libAddTag') addToLibraryFromInput();
+    }
+});
+
+// ============================================================================
+// INIT
+// ============================================================================
+
+initState();
+loadProject();
+renderRuleToggles();
+renderGroups();
+renderPlaylist();
+updateTransport();
+renderLibrary();
+renderTagFilter();
+renderSavedPlaylistSelect();
+logMessage('Mirror Sync Dance Controller v1.1 ready', 'info');
+</script>
+</body>
+</html>

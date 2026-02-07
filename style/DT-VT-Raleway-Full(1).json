@@ -1,0 +1,882 @@
+{
+  "version": "0.2.4",
+  "exportedAt": "2026-01-29T17:26:45.075Z",
+  "vt": {
+    "colors": {
+      "primary": {
+        "L": 0.44,
+        "C": 0.035,
+        "H": 247
+      },
+      "secondary": {
+        "L": 0.22,
+        "C": 0.055,
+        "H": 327
+      },
+      "accent": {
+        "L": 0.43,
+        "C": 0.085,
+        "H": 360
+      },
+      "neutral": {
+        "L": 0.74,
+        "C": 0.05,
+        "H": 73
+      },
+      "background": {
+        "L": 0.2,
+        "C": 0.01,
+        "H": 240
+      }
+    },
+    "typography": {
+      "baseFontSize": 18,
+      "lineHeight": 1.52,
+      "bodyFont": "Raleway",
+      "headingFont": "Raleway",
+      "instructionalFont": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    },
+    "spacing": {
+      "baseSpacing": 5
+    },
+    "borders": {
+      "baseWidth": 1,
+      "style": "solid",
+      "colorSource": "neutral",
+      "opacity": 0.2
+    },
+    "corners": {
+      "baseRadius": 4,
+      "radiusScale": 1.5,
+      "dampening": 0.3,
+      "nestedMode": "shrink"
+    },
+    "shadows": {
+      "baseBlur": 2,
+      "baseOffsetY": 1,
+      "baseOpacity": 0.1,
+      "baseSpread": 0,
+      "type": "drop"
+    },
+    "breakpoints": {
+      "mobile": "480px",
+      "tablet": "768px",
+      "desktop": "1024px",
+      "wide": "1400px"
+    },
+    "assets": {
+      "logoUrl": "",
+      "logoBaseSize": 18
+    },
+    "motion": {
+      "baseDuration": 300,
+      "baseEasing": "ease-out"
+    },
+    "frames": {
+      "none": {
+        "corners": {
+          "topLeft": 0,
+          "topRight": 0,
+          "bottomRight": 0,
+          "bottomLeft": 0
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0,
+        "padding": "none",
+        "margin": "none",
+        "gap": "none",
+        "shadow": "none"
+      },
+      "none-frame": {
+        "corners": {
+          "topLeft": 0,
+          "topRight": 0,
+          "bottomRight": 0,
+          "bottomLeft": 0
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0,
+        "padding": "none",
+        "margin": "none",
+        "gap": "none",
+        "shadow": "none"
+      },
+      "subtle-frame": {
+        "corners": {
+          "topLeft": 4,
+          "topRight": 4,
+          "bottomRight": 4,
+          "bottomLeft": 4
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0,
+        "padding": "sm",
+        "margin": "none",
+        "gap": "xs",
+        "shadow": "none"
+      },
+      "card-frame": {
+        "corners": {
+          "topLeft": 12,
+          "topRight": 12,
+          "bottomRight": 12,
+          "bottomLeft": 12
+        },
+        "borders": {
+          "top": 1,
+          "right": 1,
+          "bottom": 1,
+          "left": 1
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0.15,
+        "padding": "lg",
+        "margin": "sm",
+        "gap": "md",
+        "shadow": "md"
+      },
+      "button-frame": {
+        "corners": {
+          "topLeft": 6,
+          "topRight": 6,
+          "bottomRight": 6,
+          "bottomLeft": 6
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0,
+        "padding": "sm",
+        "margin": "none",
+        "gap": "xs",
+        "shadow": "none"
+      },
+      "pill-frame": {
+        "corners": {
+          "topLeft": 999,
+          "topRight": 999,
+          "bottomRight": 999,
+          "bottomLeft": 999
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0,
+        "padding": "sm",
+        "margin": "none",
+        "gap": "xs",
+        "shadow": "none"
+      },
+      "input-frame": {
+        "corners": {
+          "topLeft": 6,
+          "topRight": 6,
+          "bottomRight": 6,
+          "bottomLeft": 6
+        },
+        "borders": {
+          "top": 1,
+          "right": 1,
+          "bottom": 1,
+          "left": 1
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0.2,
+        "padding": "sm",
+        "margin": "none",
+        "gap": "xs",
+        "shadow": "none"
+      },
+      "panel-frame": {
+        "corners": {
+          "topLeft": 12,
+          "topRight": 12,
+          "bottomRight": 12,
+          "bottomLeft": 12
+        },
+        "borders": {
+          "top": 1,
+          "right": 1,
+          "bottom": 1,
+          "left": 1
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0.1,
+        "padding": "lg",
+        "margin": "sm",
+        "gap": "md",
+        "shadow": "sm"
+      },
+      "chip-frame": {
+        "corners": {
+          "topLeft": 16,
+          "topRight": 16,
+          "bottomRight": 16,
+          "bottomLeft": 16
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0,
+        "padding": "xs",
+        "margin": "none",
+        "gap": "xs",
+        "shadow": "none"
+      },
+      "topOnly-frame": {
+        "corners": {
+          "topLeft": 8,
+          "topRight": 8,
+          "bottomRight": 0,
+          "bottomLeft": 0
+        },
+        "borders": {
+          "top": 0,
+          "right": 0,
+          "bottom": 1,
+          "left": 0
+        },
+        "borderColor": "neutral",
+        "borderStyle": "solid",
+        "borderOpacity": 0.15,
+        "padding": "sm",
+        "margin": "none",
+        "gap": "sm",
+        "shadow": "none"
+      },
+      "notched-frame": {
+        "corners": {
+          "topLeft": 0,
+          "topRight": 12,
+          "bottomRight": 12,
+          "bottomLeft": 12
+        },
+        "borders": {
+          "top": 1,
+          "right": 1,
+          "bottom": 1,
+          "left": 1
+        },
+        "borderColor": "accent",
+        "borderStyle": "solid",
+        "borderOpacity": 0.3,
+        "padding": "md",
+        "margin": "sm",
+        "gap": "sm",
+        "shadow": "sm"
+      }
+    },
+    "sliderPresetRanges": {
+      "opacity": {
+        "tight": {
+          "min": 0.8,
+          "max": 1,
+          "step": 0.01
+        },
+        "moderate": {
+          "min": 0.5,
+          "max": 1,
+          "step": 0.01
+        },
+        "wide": {
+          "min": 0.1,
+          "max": 1,
+          "step": 0.01
+        }
+      },
+      "multiplier": {
+        "tight": {
+          "min": 0.8,
+          "max": 1.2,
+          "step": 0.1
+        },
+        "moderate": {
+          "min": 0.5,
+          "max": 2,
+          "step": 0.1
+        },
+        "wide": {
+          "min": 0,
+          "max": 5,
+          "step": 0.1
+        }
+      },
+      "textScaleRatio": {
+        "tight": {
+          "min": 1.125,
+          "max": 1.333,
+          "step": 0.001
+        },
+        "moderate": {
+          "min": 1.067,
+          "max": 1.618,
+          "step": 0.001
+        },
+        "wide": {
+          "min": 1,
+          "max": 3,
+          "step": 0.001
+        }
+      }
+    }
+  },
+  "dt": {
+    "id": "dt-compact",
+    "name": "Compact",
+    "description": "Tight spacing, smaller typography scale, dense layouts",
+    "scaleSystem": {
+      "linked": true
+    },
+    "typography": {
+      "scaleAlgorithm": "exponential",
+      "progression": 2,
+      "dampening": 0.98,
+      "h1FontWeight": 700,
+      "h2FontWeight": 600,
+      "h3FontWeight": 600,
+      "h4FontWeight": 500,
+      "bodyFontWeight": 400,
+      "buttonFontWeight": 500
+    },
+    "spacing": {
+      "scaleAlgorithm": "perfect-fourth",
+      "progression": 2.5,
+      "density": 0.93,
+      "axes": {
+        "linked": true,
+        "horizontal": {
+          "xsMultiplier": 1.35,
+          "smMultiplier": 1.35,
+          "mdMultiplier": 1.35,
+          "lgMultiplier": 1.35,
+          "xlMultiplier": 1.35
+        },
+        "vertical": {
+          "xsMultiplier": 1.35,
+          "smMultiplier": 1.35,
+          "mdMultiplier": 1.35,
+          "lgMultiplier": 1.35,
+          "xlMultiplier": 1.35
+        }
+      },
+      "subtleRims": false
+    },
+    "colors": {
+      "textContrastMode": "manual",
+      "interpolationSteps": 8,
+      "interpolationMaxSteps": 12,
+      "panelBg": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "background",
+          "offset": {
+            "L": -0.04,
+            "C": 0.02,
+            "H": 0
+          }
+        }
+      },
+      "panelAltBg": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "background",
+          "offset": {
+            "L": -0.02,
+            "C": 0.01,
+            "H": 0
+          }
+        }
+      },
+      "inputBg": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "background",
+          "offset": {
+            "L": -0.06,
+            "C": 0.01,
+            "H": 0
+          }
+        }
+      },
+      "chipBg": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "secondary",
+          "offset": {
+            "L": 0.15,
+            "C": -0.05,
+            "H": 0
+          }
+        }
+      },
+      "white": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "background",
+          "offset": {
+            "L": 0.03,
+            "C": -0.01,
+            "H": -240
+          }
+        }
+      },
+      "success": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "accent",
+          "offset": {
+            "L": -0.05,
+            "C": -0.01,
+            "H": -40
+          }
+        }
+      },
+      "warning": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "accent",
+          "offset": {
+            "L": 0.05,
+            "C": 0,
+            "H": -105
+          }
+        }
+      },
+      "error": {
+        "derivation": {
+          "mode": "derived",
+          "deriveFrom": "accent",
+          "offset": {
+            "L": -0.15,
+            "C": 0.03,
+            "H": -155
+          }
+        }
+      }
+    },
+    "semantics": {
+      "bodyTextColor": "neutral",
+      "h1Color": "accent",
+      "h2Color": "accent",
+      "h3Color": "accent",
+      "h4Color": "accent",
+      "panelGapUnit": "md",
+      "captionColor": "neutral",
+      "highlightColor": "primary"
+    },
+    "buttons": {
+      "fontScale": 0.8,
+      "paddingScale": 0.7,
+      "paddingMode": "linked",
+      "paddingUnitX": "sm",
+      "paddingUnitY": "xs",
+      "borderAwarePadding": true
+    },
+    "instructional": {
+      "scale": 0.5,
+      "minSize": 11
+    },
+    "logo": {
+      "sizeRef": "body",
+      "scale": 4,
+      "previewScale": 2.5
+    },
+    "surfaces": {
+      "layers": {
+        "surface-0": {
+          "label": "Background",
+          "roles": [
+            "background"
+          ],
+          "background": {
+            "source": "background",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-1": {
+          "label": "Header",
+          "roles": [
+            "interactive",
+            "primary"
+          ],
+          "background": {
+            "source": "primary",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "background"
+          }
+        },
+        "surface-2": {
+          "label": "Hover",
+          "roles": [
+            "interactive",
+            "secondary"
+          ],
+          "background": {
+            "source": "secondary",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-3": {
+          "label": "Chip",
+          "roles": [
+            "interactive",
+            "accent"
+          ],
+          "background": {
+            "source": "chipBg",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-4": {
+          "label": "Accent",
+          "roles": [
+            "muted",
+            "container"
+          ],
+          "background": {
+            "source": "accent",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "background"
+          }
+        },
+        "surface-5": {
+          "label": "Panel Alt",
+          "roles": [
+            "muted",
+            "container"
+          ],
+          "background": {
+            "source": "panelAltBg",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-6": {
+          "label": "Panel",
+          "roles": [
+            "input",
+            "container"
+          ],
+          "background": {
+            "source": "panelBg",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-7": {
+          "label": "Input",
+          "roles": [
+            "container",
+            "overlay"
+          ],
+          "background": {
+            "source": "inputBg",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-8": {
+          "label": "White Overlay",
+          "roles": [
+            "overlay",
+            "contrast"
+          ],
+          "background": {
+            "source": "white",
+            "lockMode": "match",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-9": {
+          "label": "Success",
+          "roles": [
+            "status",
+            "feedback"
+          ],
+          "background": {
+            "source": "success",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "white"
+          }
+        },
+        "surface-10": {
+          "label": "Warning",
+          "roles": [
+            "status",
+            "feedback"
+          ],
+          "background": {
+            "source": "warning",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "neutral"
+          }
+        },
+        "surface-11": {
+          "label": "Error",
+          "roles": [
+            "status",
+            "feedback"
+          ],
+          "background": {
+            "source": "error",
+            "lockMode": "derive",
+            "opacity": 1
+          },
+          "text": {
+            "source": "white"
+          }
+        }
+      },
+      "components": {
+        "button": {
+          "surface": "surface-3",
+          "spacing": {
+            "paddingMultiplier": 0.8,
+            "paddingOffset": 0
+          }
+        },
+        "input": {
+          "surface": "surface-6",
+          "spacing": {
+            "paddingMultiplier": 0.7,
+            "paddingOffset": 0
+          }
+        },
+        "card": {
+          "surface": "surface-4",
+          "spacing": {
+            "paddingMultiplier": 1,
+            "paddingOffset": 0
+          }
+        },
+        "panel": {
+          "surface": "surface-4"
+        },
+        "divider": {
+          "surface": "surface-1"
+        }
+      }
+    },
+    "corners": {
+      "xsExponent": -1,
+      "smExponent": 0,
+      "mdExponent": 1,
+      "lgExponent": 2,
+      "xlExponent": 3,
+      "pillExponent": 999,
+      "nestedOffset": -0.5
+    },
+    "shadows": {
+      "scaleAlgorithm": "exponential",
+      "progression": 2,
+      "useNeutralColor": true,
+      "steps": 4
+    },
+    "frameSpine": {
+      "steps": {
+        "f0": {},
+        "f1": {
+          "radius": 2,
+          "border": {
+            "width": 0,
+            "style": "none"
+          },
+          "paddingStep": 1
+        },
+        "f2": {
+          "radius": 4,
+          "border": {
+            "width": 1,
+            "style": "solid"
+          },
+          "paddingStep": 2
+        },
+        "f3": {
+          "radius": 6,
+          "border": {
+            "width": 1,
+            "style": "solid"
+          },
+          "paddingStep": 3,
+          "shadowStep": 1
+        },
+        "f4": {
+          "radius": 8,
+          "border": {
+            "width": 1,
+            "style": "solid"
+          },
+          "paddingStep": 4,
+          "shadowStep": 2
+        },
+        "f5": {
+          "radius": 12,
+          "border": {
+            "width": 2,
+            "style": "solid"
+          },
+          "paddingStep": 5,
+          "shadowStep": 3
+        },
+        "f6": {
+          "radius": 16,
+          "border": {
+            "width": 2,
+            "style": "solid"
+          },
+          "paddingStep": 6,
+          "shadowStep": 4
+        },
+        "f7": {
+          "radius": 20,
+          "border": {
+            "width": 2,
+            "style": "solid"
+          },
+          "paddingStep": 7,
+          "shadowStep": 5
+        },
+        "f8": {
+          "radius": 24,
+          "border": {
+            "width": 3,
+            "style": "solid"
+          },
+          "paddingStep": 8,
+          "shadowStep": 6
+        },
+        "f9": {
+          "radius": 28,
+          "border": {
+            "width": 3,
+            "style": "solid"
+          },
+          "paddingStep": 9,
+          "shadowStep": 7
+        }
+      }
+    },
+    "typographyContexts": {
+      "prose": {
+        "sizeStep": {
+          "h1": 6,
+          "h2": 5,
+          "h3": 4,
+          "h4": 3,
+          "body": 3,
+          "caption": 2,
+          "label": 2
+        }
+      },
+      "prose-compact": {
+        "sizeStep": {
+          "h1": 5,
+          "h2": 4,
+          "h3": 3,
+          "h4": 2,
+          "body": 2,
+          "caption": 1,
+          "label": 1
+        }
+      },
+      "ui": {
+        "sizeStep": {
+          "h1": 5,
+          "h2": 4,
+          "h3": 3,
+          "h4": 3,
+          "body": 3,
+          "caption": 2,
+          "label": 2
+        }
+      },
+      "ui-compact": {
+        "sizeStep": {
+          "h1": 4,
+          "h2": 3,
+          "h3": 2,
+          "h4": 2,
+          "body": 2,
+          "caption": 1,
+          "label": 1
+        }
+      }
+    },
+    "uiPreferences": {}
+  }
+}

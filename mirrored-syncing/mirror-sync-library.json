@@ -1,0 +1,305 @@
+{
+  "version": 3,
+  "mirrorRules": ["{name}_Mirror", "{name} (mirror)", "{name} [M]", "{name} (Mirrored)", "{name} Mirror", "{name} [Mirrored]"],
+  "slots": [],
+  "playlist": [],
+  "scannedAvatars": [],
+  "library": [
+    { "id": "lib_bc_01", "name": "Bento Cabaret 1", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_02", "name": "Bento Cabaret 2", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_03", "name": "Bento Cabaret 3", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_04", "name": "Bento Cabaret 4", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_05", "name": "Bento Cabaret 5", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_06", "name": "Bento Cabaret 6", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_07", "name": "Bento Cabaret 7", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_08", "name": "Bento Cabaret 8", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_09", "name": "Bento Cabaret 9", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_10", "name": "Bento Cabaret 10", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_11", "name": "Bento Cabaret 11", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_12", "name": "Bento Cabaret 12", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_13", "name": "Bento Cabaret 13", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_14", "name": "Bento Cabaret 14", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_15", "name": "Bento Cabaret 15", "tags": ["Bento Cabaret"], "duration": 30 },
+    { "id": "lib_bc_16", "name": "Bento Cabaret 16", "tags": ["Bento Cabaret"], "duration": 30 },
+
+    { "id": "lib_bch_01", "name": "Bento Charleston 1", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_02", "name": "Bento Charleston 2", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_03", "name": "Bento Charleston 3", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_04", "name": "Bento Charleston 4", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_05", "name": "Bento Charleston 5", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_06", "name": "Bento Charleston 6", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_07", "name": "Bento Charleston 7", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_08", "name": "Bento Charleston 8", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_09", "name": "Bento Charleston 9", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_10", "name": "Bento Charleston 10", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_11", "name": "Bento Charleston 11", "tags": ["Bento Charleston"], "duration": 30 },
+    { "id": "lib_bch_12", "name": "Bento Charleston 12", "tags": ["Bento Charleston"], "duration": 30 },
+
+    { "id": "lib_bsg_01", "name": "Bento_Sensual_Goddess_1", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_02", "name": "Bento_Sensual_Goddess_2", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_03", "name": "Bento_Sensual_Goddess_3", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_04", "name": "Bento_Sensual_Goddess_4", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_05", "name": "Bento_Sensual_Goddess_5", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_06", "name": "Bento_Sensual_Goddess_6", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_07", "name": "Bento_Sensual_Goddess_7", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_08", "name": "Bento_Sensual_Goddess_8", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_09", "name": "Bento_Sensual_Goddess_9", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_10", "name": "Bento_Sensual_Goddess_10", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_11", "name": "Bento_Sensual_Goddess_11", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_12", "name": "Bento_Sensual_Goddess_12", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_13", "name": "Bento_Sensual_Goddess_13", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_14", "name": "Bento_Sensual_Goddess_14", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_15", "name": "Bento_Sensual_Goddess_15", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+    { "id": "lib_bsg_16", "name": "Bento_Sensual_Goddess_16", "tags": ["Bento Sensual Goddess"], "duration": 30 },
+
+    { "id": "lib_dss_01", "name": "Dana - Salsa Solo Dance 01_PARAGON", "tags": ["Dana - Salsa Solo"], "duration": 30 },
+    { "id": "lib_dss_02", "name": "Dana - Salsa Solo Dance 02_PARAGON", "tags": ["Dana - Salsa Solo"], "duration": 30 },
+    { "id": "lib_dss_03", "name": "Dana - Salsa Solo Dance 03_PARAGON", "tags": ["Dana - Salsa Solo"], "duration": 30 },
+    { "id": "lib_dss_04", "name": "Dana - Salsa Solo Dance 04_PARAGON", "tags": ["Dana - Salsa Solo"], "duration": 30 },
+    { "id": "lib_dss_05", "name": "Dana - Salsa Solo Dance 05_PARAGON", "tags": ["Dana - Salsa Solo"], "duration": 30 },
+
+    { "id": "lib_jbb_01", "name": "Jasmine - Body & Booty Groove 01_PARAGON", "tags": ["Jasmine - Body & Booty Groove"], "duration": 30 },
+    { "id": "lib_jbb_02", "name": "Jasmine - Body & Booty Groove 02_PARAGON", "tags": ["Jasmine - Body & Booty Groove"], "duration": 30 },
+    { "id": "lib_jbb_03", "name": "Jasmine - Body & Booty Groove 03_PARAGON", "tags": ["Jasmine - Body & Booty Groove"], "duration": 30 },
+    { "id": "lib_jbb_04", "name": "Jasmine - Body & Booty Groove 04_PARAGON", "tags": ["Jasmine - Body & Booty Groove"], "duration": 30 },
+    { "id": "lib_jbb_05", "name": "Jasmine - Body & Booty Groove 05_PARAGON", "tags": ["Jasmine - Body & Booty Groove"], "duration": 30 },
+
+    { "id": "lib_jor_01", "name": "Jortay - Afro-Latin Hip Hop Dance_PARAGON *RARE*", "tags": ["Jortay"], "duration": 30 },
+    { "id": "lib_jor_02", "name": "Jortay - Heels Dance 08_PARAGON", "tags": ["Jortay"], "duration": 30 },
+
+    { "id": "lib_keg_01", "name": "Kayla - Erotic Groove 01_PARAGON", "tags": ["Kayla - Erotic Groove"], "duration": 30 },
+    { "id": "lib_keg_02", "name": "Kayla - Erotic Groove 02_PARAGON", "tags": ["Kayla - Erotic Groove"], "duration": 30 },
+    { "id": "lib_keg_03", "name": "Kayla - Erotic Groove 03_PARAGON", "tags": ["Kayla - Erotic Groove"], "duration": 30 },
+    { "id": "lib_keg_04", "name": "Kayla - Erotic Groove 04_PARAGON", "tags": ["Kayla - Erotic Groove"], "duration": 30 },
+    { "id": "lib_keg_05", "name": "Kayla - Erotic Groove 05_PARAGON", "tags": ["Kayla - Erotic Groove"], "duration": 30 },
+
+    { "id": "lib_mjf_01", "name": "Madison - Jazz Funk V2 Dance 06_PARAGON v1.1", "tags": ["Madison - Jazz Funk V2"], "duration": 30 },
+    { "id": "lib_mjf_02", "name": "Madison - Jazz Funk V2 Dance 07_PARAGON v1.1", "tags": ["Madison - Jazz Funk V2"], "duration": 30 },
+    { "id": "lib_mjf_03", "name": "Madison - Jazz Funk V2 Dance 08_PARAGON v1.1", "tags": ["Madison - Jazz Funk V2"], "duration": 30 },
+    { "id": "lib_mjf_04", "name": "Madison - Jazz Funk V2 Dance 09_PARAGON v1.1", "tags": ["Madison - Jazz Funk V2"], "duration": 30 },
+
+    { "id": "lib_mlh_01", "name": "Madison - Lyrical Hip Hop 01_PARAGON v1.1", "tags": ["Madison - Lyrical Hip Hop"], "duration": 30 },
+    { "id": "lib_mlh_02", "name": "Madison - Lyrical Hip Hop 02_PARAGON v1.1", "tags": ["Madison - Lyrical Hip Hop"], "duration": 30 },
+    { "id": "lib_mlh_03", "name": "Madison - Lyrical Hip Hop 03_PARAGON v1.1", "tags": ["Madison - Lyrical Hip Hop"], "duration": 30 },
+
+    { "id": "lib_meg_01", "name": "Melissa - Erotic Groove 01_PARAGON", "tags": ["Melissa - Erotic Groove"], "duration": 30 },
+    { "id": "lib_meg_02", "name": "Melissa - Erotic Groove 02_PARAGON", "tags": ["Melissa - Erotic Groove"], "duration": 30 },
+    { "id": "lib_meg_03", "name": "Melissa - Erotic Groove 03_PARAGON", "tags": ["Melissa - Erotic Groove"], "duration": 30 },
+    { "id": "lib_meg_04", "name": "Melissa - Erotic Groove 04_PARAGON", "tags": ["Melissa - Erotic Groove"], "duration": 30 },
+    { "id": "lib_meg_05", "name": "Melissa - Erotic Groove 05_PARAGON", "tags": ["Melissa - Erotic Groove"], "duration": 30 },
+    { "id": "lib_meg_06", "name": "Melissa - Erotic Groove 06_PARAGON", "tags": ["Melissa - Erotic Groove"], "duration": 30 },
+
+    { "id": "lib_mhd_01", "name": "Melissa - Heels Dance 01_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_02", "name": "Melissa - Heels Dance 02_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_03", "name": "Melissa - Heels Dance 03_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_04", "name": "Melissa - Heels Dance 04_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_05", "name": "Melissa - Heels Dance 05_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_06", "name": "Melissa - Heels Dance 06_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_07", "name": "Melissa - Heels Dance 07_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_08", "name": "Melissa - Heels Dance 08_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_09", "name": "Melissa - Heels Dance 09_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+    { "id": "lib_mhd_10", "name": "Melissa - Heels Dance 10_PARAGON", "tags": ["Melissa - Heels Dance"], "duration": 30 },
+
+    { "id": "lib_msj_01", "name": "Miranda - Street Jazz Dance 01_PARAGON", "tags": ["Miranda - Street Jazz Dance"], "duration": 30 },
+    { "id": "lib_msj_02", "name": "Miranda - Street Jazz Dance 02_PARAGON", "tags": ["Miranda - Street Jazz Dance"], "duration": 30 },
+    { "id": "lib_msj_03", "name": "Miranda - Street Jazz Dance 03_PARAGON", "tags": ["Miranda - Street Jazz Dance"], "duration": 30 },
+
+    { "id": "lib_nbh_01", "name": "Nicole - Buttons Heels Dance 01_PARAGON", "tags": ["Nicole - Buttons Heels Dance"], "duration": 30 },
+    { "id": "lib_nbh_02", "name": "Nicole - Buttons Heels Dance 02_PARAGON", "tags": ["Nicole - Buttons Heels Dance"], "duration": 30 },
+    { "id": "lib_nbh_03", "name": "Nicole - Buttons Heels Dance 03_PARAGON", "tags": ["Nicole - Buttons Heels Dance"], "duration": 30 },
+    { "id": "lib_nbh_04", "name": "Nicole - Buttons Heels Dance 04_PARAGON", "tags": ["Nicole - Buttons Heels Dance"], "duration": 30 },
+    { "id": "lib_nbh_05", "name": "Nicole - Buttons Heels Dance 05_PARAGON", "tags": ["Nicole - Buttons Heels Dance"], "duration": 30 },
+    { "id": "lib_nbh_06", "name": "Nicole - Buttons Heels Dance 06_PARAGON", "tags": ["Nicole - Buttons Heels Dance"], "duration": 30 },
+
+    { "id": "lib_sba_01", "name": "Slow_Burlesque_1_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_02", "name": "Slow_Burlesque_2_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_03", "name": "Slow_Burlesque_3_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_04", "name": "Slow_Burlesque_4_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_05", "name": "Slow_Burlesque_5_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_06", "name": "Slow_Burlesque_6_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_07", "name": "Slow_Burlesque_7_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_08", "name": "Slow_Burlesque_8_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_09", "name": "Slow_Burlesque_9_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_10", "name": "Slow_Burlesque_10_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_11", "name": "Slow_Burlesque_11_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_12", "name": "Slow_Burlesque_12_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_13", "name": "Slow_Burlesque_13_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_14", "name": "Slow_Burlesque_14_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_15", "name": "Slow_Burlesque_15_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+    { "id": "lib_sba_16", "name": "Slow_Burlesque_16_Abra", "tags": ["Slow Burlesque - Abra"], "duration": 30 },
+
+    { "id": "lib_mcf_01", "name": "Madison - Contempo Fusion Dance 01_PARAGON", "tags": ["Madison - Contempo Fusion Dance"], "duration": 30 },
+    { "id": "lib_mcf_02", "name": "Madison - Contempo Fusion Dance 02_PARAGON", "tags": ["Madison - Contempo Fusion Dance"], "duration": 30 },
+    { "id": "lib_mcf_03", "name": "Madison - Contempo Fusion Dance 03_PARAGON", "tags": ["Madison - Contempo Fusion Dance"], "duration": 30 },
+
+    { "id": "lib_niv_01", "name": "Nicole - It's a Vibe Dance 01_PARAGON", "tags": ["Nicole - It's a Vibe Dance"], "duration": 30 },
+    { "id": "lib_niv_02", "name": "Nicole - It's a Vibe Dance 02_PARAGON", "tags": ["Nicole - It's a Vibe Dance"], "duration": 30 },
+    { "id": "lib_niv_03", "name": "Nicole - It's a Vibe Dance 03_PARAGON", "tags": ["Nicole - It's a Vibe Dance"], "duration": 30 },
+    { "id": "lib_niv_04", "name": "Nicole - It's a Vibe Dance 04_PARAGON", "tags": ["Nicole - It's a Vibe Dance"], "duration": 30 },
+
+    { "id": "lib_vhd_01", "name": "Venetia - Heels Dance 01_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_02", "name": "Venetia - Heels Dance 02_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_03", "name": "Venetia - Heels Dance 03_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_04", "name": "Venetia - Heels Dance 04_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_05", "name": "Venetia - Heels Dance 05_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_06", "name": "Venetia - Heels Dance 06_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_07", "name": "Venetia - Heels Dance 07_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_08", "name": "Venetia - Heels Dance 08_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_09", "name": "Venetia - Heels Dance 09_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 },
+    { "id": "lib_vhd_10", "name": "Venetia - Heels Dance 10_PARAGON", "tags": ["Venetia - Heels Dance"], "duration": 30 }
+  ],
+  "savedPlaylists": [
+    {
+      "id": "sp_bc", "name": "Bento Cabaret", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Bento Cabaret 1", "duration": 30 }, { "name": "Bento Cabaret 2", "duration": 30 },
+        { "name": "Bento Cabaret 3", "duration": 30 }, { "name": "Bento Cabaret 4", "duration": 30 },
+        { "name": "Bento Cabaret 5", "duration": 30 }, { "name": "Bento Cabaret 6", "duration": 30 },
+        { "name": "Bento Cabaret 7", "duration": 30 }, { "name": "Bento Cabaret 8", "duration": 30 },
+        { "name": "Bento Cabaret 9", "duration": 30 }, { "name": "Bento Cabaret 10", "duration": 30 },
+        { "name": "Bento Cabaret 11", "duration": 30 }, { "name": "Bento Cabaret 12", "duration": 30 },
+        { "name": "Bento Cabaret 13", "duration": 30 }, { "name": "Bento Cabaret 14", "duration": 30 },
+        { "name": "Bento Cabaret 15", "duration": 30 }, { "name": "Bento Cabaret 16", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_bch", "name": "Bento Charleston", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Bento Charleston 1", "duration": 30 }, { "name": "Bento Charleston 2", "duration": 30 },
+        { "name": "Bento Charleston 3", "duration": 30 }, { "name": "Bento Charleston 4", "duration": 30 },
+        { "name": "Bento Charleston 5", "duration": 30 }, { "name": "Bento Charleston 6", "duration": 30 },
+        { "name": "Bento Charleston 7", "duration": 30 }, { "name": "Bento Charleston 8", "duration": 30 },
+        { "name": "Bento Charleston 9", "duration": 30 }, { "name": "Bento Charleston 10", "duration": 30 },
+        { "name": "Bento Charleston 11", "duration": 30 }, { "name": "Bento Charleston 12", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_bsg", "name": "Bento Sensual Goddess", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Bento_Sensual_Goddess_1", "duration": 30 }, { "name": "Bento_Sensual_Goddess_2", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_3", "duration": 30 }, { "name": "Bento_Sensual_Goddess_4", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_5", "duration": 30 }, { "name": "Bento_Sensual_Goddess_6", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_7", "duration": 30 }, { "name": "Bento_Sensual_Goddess_8", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_9", "duration": 30 }, { "name": "Bento_Sensual_Goddess_10", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_11", "duration": 30 }, { "name": "Bento_Sensual_Goddess_12", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_13", "duration": 30 }, { "name": "Bento_Sensual_Goddess_14", "duration": 30 },
+        { "name": "Bento_Sensual_Goddess_15", "duration": 30 }, { "name": "Bento_Sensual_Goddess_16", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_dss", "name": "Dana - Salsa Solo", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Dana - Salsa Solo Dance 01_PARAGON", "duration": 30 }, { "name": "Dana - Salsa Solo Dance 02_PARAGON", "duration": 30 },
+        { "name": "Dana - Salsa Solo Dance 03_PARAGON", "duration": 30 }, { "name": "Dana - Salsa Solo Dance 04_PARAGON", "duration": 30 },
+        { "name": "Dana - Salsa Solo Dance 05_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_jbb", "name": "Jasmine - Body & Booty Groove", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Jasmine - Body & Booty Groove 01_PARAGON", "duration": 30 }, { "name": "Jasmine - Body & Booty Groove 02_PARAGON", "duration": 30 },
+        { "name": "Jasmine - Body & Booty Groove 03_PARAGON", "duration": 30 }, { "name": "Jasmine - Body & Booty Groove 04_PARAGON", "duration": 30 },
+        { "name": "Jasmine - Body & Booty Groove 05_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_jor", "name": "Jortay", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Jortay - Afro-Latin Hip Hop Dance_PARAGON *RARE*", "duration": 30 },
+        { "name": "Jortay - Heels Dance 08_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_keg", "name": "Kayla - Erotic Groove", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Kayla - Erotic Groove 01_PARAGON", "duration": 30 }, { "name": "Kayla - Erotic Groove 02_PARAGON", "duration": 30 },
+        { "name": "Kayla - Erotic Groove 03_PARAGON", "duration": 30 }, { "name": "Kayla - Erotic Groove 04_PARAGON", "duration": 30 },
+        { "name": "Kayla - Erotic Groove 05_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_mjf", "name": "Madison - Jazz Funk V2", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Madison - Jazz Funk V2 Dance 06_PARAGON v1.1", "duration": 30 }, { "name": "Madison - Jazz Funk V2 Dance 07_PARAGON v1.1", "duration": 30 },
+        { "name": "Madison - Jazz Funk V2 Dance 08_PARAGON v1.1", "duration": 30 }, { "name": "Madison - Jazz Funk V2 Dance 09_PARAGON v1.1", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_mlh", "name": "Madison - Lyrical Hip Hop", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Madison - Lyrical Hip Hop 01_PARAGON v1.1", "duration": 30 }, { "name": "Madison - Lyrical Hip Hop 02_PARAGON v1.1", "duration": 30 },
+        { "name": "Madison - Lyrical Hip Hop 03_PARAGON v1.1", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_meg", "name": "Melissa - Erotic Groove", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Melissa - Erotic Groove 01_PARAGON", "duration": 30 }, { "name": "Melissa - Erotic Groove 02_PARAGON", "duration": 30 },
+        { "name": "Melissa - Erotic Groove 03_PARAGON", "duration": 30 }, { "name": "Melissa - Erotic Groove 04_PARAGON", "duration": 30 },
+        { "name": "Melissa - Erotic Groove 05_PARAGON", "duration": 30 }, { "name": "Melissa - Erotic Groove 06_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_mhd", "name": "Melissa - Heels Dance", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Melissa - Heels Dance 01_PARAGON", "duration": 30 }, { "name": "Melissa - Heels Dance 02_PARAGON", "duration": 30 },
+        { "name": "Melissa - Heels Dance 03_PARAGON", "duration": 30 }, { "name": "Melissa - Heels Dance 04_PARAGON", "duration": 30 },
+        { "name": "Melissa - Heels Dance 05_PARAGON", "duration": 30 }, { "name": "Melissa - Heels Dance 06_PARAGON", "duration": 30 },
+        { "name": "Melissa - Heels Dance 07_PARAGON", "duration": 30 }, { "name": "Melissa - Heels Dance 08_PARAGON", "duration": 30 },
+        { "name": "Melissa - Heels Dance 09_PARAGON", "duration": 30 }, { "name": "Melissa - Heels Dance 10_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_msj", "name": "Miranda - Street Jazz Dance", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Miranda - Street Jazz Dance 01_PARAGON", "duration": 30 }, { "name": "Miranda - Street Jazz Dance 02_PARAGON", "duration": 30 },
+        { "name": "Miranda - Street Jazz Dance 03_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_nbh", "name": "Nicole - Buttons Heels Dance", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Nicole - Buttons Heels Dance 01_PARAGON", "duration": 30 }, { "name": "Nicole - Buttons Heels Dance 02_PARAGON", "duration": 30 },
+        { "name": "Nicole - Buttons Heels Dance 03_PARAGON", "duration": 30 }, { "name": "Nicole - Buttons Heels Dance 04_PARAGON", "duration": 30 },
+        { "name": "Nicole - Buttons Heels Dance 05_PARAGON", "duration": 30 }, { "name": "Nicole - Buttons Heels Dance 06_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_sba", "name": "Slow Burlesque - Abra", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Slow_Burlesque_1_Abra", "duration": 30 }, { "name": "Slow_Burlesque_2_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_3_Abra", "duration": 30 }, { "name": "Slow_Burlesque_4_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_5_Abra", "duration": 30 }, { "name": "Slow_Burlesque_6_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_7_Abra", "duration": 30 }, { "name": "Slow_Burlesque_8_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_9_Abra", "duration": 30 }, { "name": "Slow_Burlesque_10_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_11_Abra", "duration": 30 }, { "name": "Slow_Burlesque_12_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_13_Abra", "duration": 30 }, { "name": "Slow_Burlesque_14_Abra", "duration": 30 },
+        { "name": "Slow_Burlesque_15_Abra", "duration": 30 }, { "name": "Slow_Burlesque_16_Abra", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_mcf", "name": "Madison - Contempo Fusion Dance", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Madison - Contempo Fusion Dance 01_PARAGON", "duration": 30 }, { "name": "Madison - Contempo Fusion Dance 02_PARAGON", "duration": 30 },
+        { "name": "Madison - Contempo Fusion Dance 03_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_niv", "name": "Nicole - It's a Vibe Dance", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Nicole - It's a Vibe Dance 01_PARAGON", "duration": 30 }, { "name": "Nicole - It's a Vibe Dance 02_PARAGON", "duration": 30 },
+        { "name": "Nicole - It's a Vibe Dance 03_PARAGON", "duration": 30 }, { "name": "Nicole - It's a Vibe Dance 04_PARAGON", "duration": 30 }
+      ]
+    },
+    {
+      "id": "sp_vhd", "name": "Venetia - Heels Dance", "createdAt": "2025-01-01T00:00:00.000Z", "updatedAt": "2025-01-01T00:00:00.000Z",
+      "items": [
+        { "name": "Venetia - Heels Dance 01_PARAGON", "duration": 30 }, { "name": "Venetia - Heels Dance 02_PARAGON", "duration": 30 },
+        { "name": "Venetia - Heels Dance 03_PARAGON", "duration": 30 }, { "name": "Venetia - Heels Dance 04_PARAGON", "duration": 30 },
+        { "name": "Venetia - Heels Dance 05_PARAGON", "duration": 30 }, { "name": "Venetia - Heels Dance 06_PARAGON", "duration": 30 },
+        { "name": "Venetia - Heels Dance 07_PARAGON", "duration": 30 }, { "name": "Venetia - Heels Dance 08_PARAGON", "duration": 30 },
+        { "name": "Venetia - Heels Dance 09_PARAGON", "duration": 30 }, { "name": "Venetia - Heels Dance 10_PARAGON", "duration": 30 }
+      ]
+    }
+  ]
+}

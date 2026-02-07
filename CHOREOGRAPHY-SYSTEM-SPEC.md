@@ -12,6 +12,7 @@ A web-based choreography planner with a custom LSL engine for Second Life animes
 | LSL Engine (Animesh) | `lsl/dancer.lsl`, `lsl/controller.lsl` | [docs/lsl-engine-spec.md](docs/lsl-engine-spec.md) | Done (testing pending) |
 | LSL Engine (Avatar) | `lsl/avatar-controller.lsl`, `lsl/avatar-slot.lsl`, `lsl/avatar-mover.lsl` | [docs/wiki.md#real-avatar-system](docs/wiki.md#real-avatar-system) | Done |
 | Timeline Planner | `timeline.html` | [docs/timeline-spec.md](docs/timeline-spec.md) | Done |
+| Mirror Sync Dance | `mirrored-syncing/mirror-controller.lsl`, `mirrored-syncing/mirror-slot.lsl`, `mirrored-syncing/mirror-sync.html` | — | Done |
 
 ## File Structure
 
@@ -31,6 +32,10 @@ SL-Choreography/
     lsl-engine-spec.md        — LSL engine specification
     timeline-spec.md          — Timeline planner specification
     wiki.md                   — Full system wiki
+  mirrored-syncing/
+    mirror-controller.lsl   — Mirror sync dance controller (v1.0)
+    mirror-slot.lsl         — Mirror sync animation slot (v1.0)
+    mirror-sync.html        — Mirror sync web control page
   CHOREOGRAPHY-SYSTEM-SPEC.md — This overview
 ```
 
@@ -45,3 +50,4 @@ SL-Choreography/
 - v7: Separated specs, CSV import for bulk-loading animation libraries
 - v8: System wiki documentation
 - v9: Real-avatar choreography system (avatar-controller, avatar-slot, avatar-mover scripts)
+- v10: Mirror Sync Dance system (two-group mirrored animation sync, touch-to-join, web control page)

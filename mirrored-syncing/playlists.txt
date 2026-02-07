@@ -1,0 +1,164 @@
+# Mirror Sync Dance — Playlists
+# Generated from lsl/dancelist.txt
+# Only originals listed — mirrors are auto-detected by the controller.
+# Paste animation names into the HTML playlist editor, or use "Load from Inv" in-world.
+
+=== Bento Cabaret (16 dances) ===
+Bento Cabaret 1
+Bento Cabaret 2
+Bento Cabaret 3
+Bento Cabaret 4
+Bento Cabaret 5
+Bento Cabaret 6
+Bento Cabaret 7
+Bento Cabaret 8
+Bento Cabaret 9
+Bento Cabaret 10
+Bento Cabaret 11
+Bento Cabaret 12
+Bento Cabaret 13
+Bento Cabaret 14
+Bento Cabaret 15
+Bento Cabaret 16
+
+=== Bento Charleston (12 dances) ===
+Bento Charleston 1
+Bento Charleston 2
+Bento Charleston 3
+Bento Charleston 4
+Bento Charleston 5
+Bento Charleston 6
+Bento Charleston 7
+Bento Charleston 8
+Bento Charleston 9
+Bento Charleston 10
+Bento Charleston 11
+Bento Charleston 12
+
+=== Bento Sensual Goddess (16 dances) ===
+Bento_Sensual_Goddess_1
+Bento_Sensual_Goddess_2
+Bento_Sensual_Goddess_3
+Bento_Sensual_Goddess_4
+Bento_Sensual_Goddess_5
+Bento_Sensual_Goddess_6
+Bento_Sensual_Goddess_7
+Bento_Sensual_Goddess_8
+Bento_Sensual_Goddess_9
+Bento_Sensual_Goddess_10
+Bento_Sensual_Goddess_11
+Bento_Sensual_Goddess_12
+Bento_Sensual_Goddess_13
+Bento_Sensual_Goddess_14
+Bento_Sensual_Goddess_15
+Bento_Sensual_Goddess_16
+
+=== Dana - Salsa Solo (5 dances) ===
+Dana - Salsa Solo Dance 01_PARAGON
+Dana - Salsa Solo Dance 02_PARAGON
+Dana - Salsa Solo Dance 03_PARAGON
+Dana - Salsa Solo Dance 04_PARAGON
+Dana - Salsa Solo Dance 05_PARAGON
+
+=== Jasmine - Body & Booty Groove (5 dances) ===
+Jasmine - Body & Booty Groove 01_PARAGON
+Jasmine - Body & Booty Groove 02_PARAGON
+Jasmine - Body & Booty Groove 03_PARAGON
+Jasmine - Body & Booty Groove 04_PARAGON
+Jasmine - Body & Booty Groove 05_PARAGON
+
+=== Jortay (2 dances) ===
+Jortay - Afro-Latin Hip Hop Dance_PARAGON *RARE*
+Jortay - Heels Dance 08_PARAGON
+
+=== Kayla - Erotic Groove (5 dances) ===
+Kayla - Erotic Groove 01_PARAGON
+Kayla - Erotic Groove 02_PARAGON
+Kayla - Erotic Groove 03_PARAGON
+Kayla - Erotic Groove 04_PARAGON
+Kayla - Erotic Groove 05_PARAGON
+
+=== Madison - Jazz Funk V2 (4 dances) ===
+Madison - Jazz Funk V2 Dance 06_PARAGON v1.1
+Madison - Jazz Funk V2 Dance 07_PARAGON v1.1
+Madison - Jazz Funk V2 Dance 08_PARAGON v1.1
+Madison - Jazz Funk V2 Dance 09_PARAGON v1.1
+
+=== Madison - Lyrical Hip Hop (3 dances) ===
+Madison - Lyrical Hip Hop 01_PARAGON v1.1
+Madison - Lyrical Hip Hop 02_PARAGON v1.1
+Madison - Lyrical Hip Hop 03_PARAGON v1.1
+
+=== Melissa - Erotic Groove (6 dances) ===
+Melissa - Erotic Groove 01_PARAGON
+Melissa - Erotic Groove 02_PARAGON
+Melissa - Erotic Groove 03_PARAGON
+Melissa - Erotic Groove 04_PARAGON
+Melissa - Erotic Groove 05_PARAGON
+Melissa - Erotic Groove 06_PARAGON
+
+=== Melissa - Heels Dance (10 dances) ===
+Melissa - Heels Dance 01_PARAGON
+Melissa - Heels Dance 02_PARAGON
+Melissa - Heels Dance 03_PARAGON
+Melissa - Heels Dance 04_PARAGON
+Melissa - Heels Dance 05_PARAGON
+Melissa - Heels Dance 06_PARAGON
+Melissa - Heels Dance 07_PARAGON
+Melissa - Heels Dance 08_PARAGON
+Melissa - Heels Dance 09_PARAGON
+Melissa - Heels Dance 10_PARAGON
+
+=== Miranda - Street Jazz Dance (3 dances) ===
+Miranda - Street Jazz Dance 01_PARAGON
+Miranda - Street Jazz Dance 02_PARAGON
+Miranda - Street Jazz Dance 03_PARAGON
+
+=== Nicole - Buttons Heels Dance (6 dances) ===
+Nicole - Buttons Heels Dance 01_PARAGON
+Nicole - Buttons Heels Dance 02_PARAGON
+Nicole - Buttons Heels Dance 03_PARAGON
+Nicole - Buttons Heels Dance 04_PARAGON
+Nicole - Buttons Heels Dance 05_PARAGON
+Nicole - Buttons Heels Dance 06_PARAGON
+
+=== Slow Burlesque - Abra (16 dances) ===
+Slow_Burlesque_1_Abra
+Slow_Burlesque_2_Abra
+Slow_Burlesque_3_Abra
+Slow_Burlesque_4_Abra
+Slow_Burlesque_5_Abra
+Slow_Burlesque_6_Abra
+Slow_Burlesque_7_Abra
+Slow_Burlesque_8_Abra
+Slow_Burlesque_9_Abra
+Slow_Burlesque_10_Abra
+Slow_Burlesque_11_Abra
+Slow_Burlesque_12_Abra
+Slow_Burlesque_13_Abra
+Slow_Burlesque_14_Abra
+Slow_Burlesque_15_Abra
+Slow_Burlesque_16_Abra
+
+=== Madison - Contempo Fusion Dance (3 dances) ===
+Madison - Contempo Fusion Dance 01_PARAGON
+Madison - Contempo Fusion Dance 02_PARAGON
+Madison - Contempo Fusion Dance 03_PARAGON
+
+=== Nicole - It's a Vibe Dance (4 dances) ===
+Nicole - It's a Vibe Dance 01_PARAGON
+Nicole - It's a Vibe Dance 02_PARAGON
+Nicole - It's a Vibe Dance 03_PARAGON
+Nicole - It's a Vibe Dance 04_PARAGON
+
+=== Venetia - Heels Dance (10 dances) ===
+Venetia - Heels Dance 01_PARAGON
+Venetia - Heels Dance 02_PARAGON
+Venetia - Heels Dance 03_PARAGON
+Venetia - Heels Dance 04_PARAGON
+Venetia - Heels Dance 05_PARAGON
+Venetia - Heels Dance 06_PARAGON
+Venetia - Heels Dance 07_PARAGON
+Venetia - Heels Dance 08_PARAGON
+Venetia - Heels Dance 09_PARAGON
+Venetia - Heels Dance 10_PARAGON
