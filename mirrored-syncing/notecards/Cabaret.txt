@@ -1,5 +1,5 @@
 # Cabaret (15 dances)
-# Duration-aware — auto-advance supported
+# v1.9 format: name:duration (pairs auto-detected from inventory)
 Cabaret1:29
 Cabaret2:27.5
 Cabaret3:30.5

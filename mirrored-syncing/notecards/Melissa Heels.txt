@@ -1,11 +1,12 @@
 # Melissa Heels Dance — Paragon (10 dances)
-Melissa - Heels Dance 01_PARAGON
-Melissa - Heels Dance 02_PARAGON
-Melissa - Heels Dance 03_PARAGON
-Melissa - Heels Dance 04_PARAGON
-Melissa - Heels Dance 05_PARAGON
-Melissa - Heels Dance 06_PARAGON
-Melissa - Heels Dance 07_PARAGON
-Melissa - Heels Dance 08_PARAGON
-Melissa - Heels Dance 09_PARAGON
-Melissa - Heels Dance 10_PARAGON
+# v1.9 format: name,pair
+Melissa - Heels Dance 01_PARAGON,Melissa - Heels Dance 01_PARAGON (Mirrored)
+Melissa - Heels Dance 02_PARAGON,Melissa - Heels Dance 02_PARAGON (Mirrored)
+Melissa - Heels Dance 03_PARAGON,Melissa - Heels Dance 03_PARAGON (Mirrored)
+Melissa - Heels Dance 04_PARAGON,Melissa - Heels Dance 04_PARAGON (Mirrored)
+Melissa - Heels Dance 05_PARAGON,Melissa - Heels Dance 05_PARAGON (Mirrored)
+Melissa - Heels Dance 06_PARAGON,Melissa - Heels Dance 06_PARAGON (Mirrored)
+Melissa - Heels Dance 07_PARAGON,Melissa - Heels Dance 07_PARAGON (Mirrored)
+Melissa - Heels Dance 08_PARAGON,Melissa - Heels Dance 08_PARAGON (Mirrored)
+Melissa - Heels Dance 09_PARAGON,Melissa - Heels Dance 09_PARAGON (Mirrored)
+Melissa - Heels Dance 10_PARAGON,Melissa - Heels Dance 10_PARAGON (Mirrored)

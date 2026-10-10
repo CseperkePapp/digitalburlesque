@@ -151,7 +151,7 @@
 
 <!-- TOOLBAR -->
 <div id="toolbar">
-    <h1>Mirror Sync Dance Controller v1.5</h1>
+    <h1>Mirror Sync Dance Controller v1.9</h1>
     <div class="actions">
         <button onclick="toggleLibraryPanel()">Library</button>
         <button onclick="exportProject()">Export</button>
@@ -205,24 +205,6 @@
                 <button class="btn-primary" onclick="connectToController()">Connect</button>
                 <span class="status-dot disconnected" id="statusDot"></span>
                 <span id="connStatus">Not connected</span>
-            </div>
-        </div>
-
-        <!-- Mirror Rules -->
-        <div class="section">
-            <h3>Mirror Rules</h3>
-            <div style="font-size:11px; color:#888; margin-bottom:6px;">Click to toggle rules. Controller tries each in order and uses the first match found in inventory.</div>
-            <div id="ruleToggles"></div>
-            <div class="rule-row" style="margin-top:6px;">
-                <input type="text" id="mirrorRuleInput" placeholder="Custom rule with {name}">
-                <button class="btn-small" onclick="addCustomRule()">Add</button>
-            </div>
-            <div style="margin-top:6px;">
-                <button class="btn-small btn-primary" onclick="sendMirrorRules()">Send to SL</button>
-            </div>
-            <div class="mirror-preview">
-                Preview: <input type="text" id="mirrorTestInput" placeholder="type anim name" value="dance1" style="width:90px;" oninput="updateMirrorPreview()">
-                <div id="mirrorPreviewResult" style="margin-top:2px;"></div>
             </div>
         </div>
 
@@ -288,7 +270,7 @@
                     <tr>
                         <th style="width:30px;">#</th>
                         <th>Animation</th>
-                        <th>Mirror Name</th>
+                        <th>Paired With</th>
                         <th style="width:50px;">Dur</th>
                         <th style="width:55px;"></th>
                     </tr>
@@ -357,20 +339,16 @@ Bento Cabaret 2
 const MAX_SLOTS = 8;
 const MAX_PER_GROUP = 4;
 
-const RULE_SEP = ';;';
-const DEFAULT_RULES = ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'];
-
 let state = {
     version: 3,
     controllerUrl: '',
-    mirrorRules: ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'],
     slots: [],            // { slotNum, avatarKey, avatarName, group, hasPerms }
-    playlist: [],         // { name, duration }
+    playlist: [],         // { name, duration, pairedWith }
     playIdx: 0,
     playing: false,
     scannedAvatars: [],   // { key, name }
-    library: [],          // { id, name, tags:[], duration }
-    savedPlaylists: [],   // { id, name, items:[{name,duration}], createdAt, updatedAt }
+    library: [],          // { id, name, tags:[], duration, pairedWith }
+    savedPlaylists: [],   // { id, name, items:[{name,duration,pairedWith}], createdAt, updatedAt }
     libraryFilterTag: '',
     librarySearchText: ''
 };
@@ -385,114 +363,6 @@ function initState() {
     state.savedPlaylists = [];
     state.libraryFilterTag = '';
     state.librarySearchText = '';
-}
-
-// ============================================================================
-// MIRROR RULES
-// ============================================================================
-
-function applyRule(rule, animName) {
-    return rule.replace(/\{name\}/g, animName);
-}
-
-// Returns the first rule's result (in-world the controller checks inventory)
-function getMirrorName(animName) {
-    if (state.mirrorRules.length === 0) return animName;
-    return applyRule(state.mirrorRules[0], animName);
-}
-
-// Returns all possible mirror names from all active rules
-function getAllMirrorNames(animName) {
-    return state.mirrorRules.map(r => applyRule(r, animName));
-}
-
-function renderRuleToggles() {
-    const container = document.getElementById('ruleToggles');
-    const presets = ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'];
-
-    let html = '';
-    // Show all known rules (presets + any custom ones in state)
-    const allRules = [...new Set([...presets, ...state.mirrorRules])];
-
-    allRules.forEach(rule => {
-        const isActive = state.mirrorRules.includes(rule);
-        const idx = state.mirrorRules.indexOf(rule);
-        const cls = isActive ? 'active' : 'inactive';
-        const num = isActive ? (idx + 1) + '.' : '';
-        const isCustom = !presets.includes(rule);
-
-        html += `<div class="rule-toggle ${cls}" onclick="toggleRule('${escAttr(rule)}')">
-            <span class="rule-num">${num}</span>
-            <span>${escHtml(rule)}</span>
-            ${isCustom ? `<span class="rule-remove" onclick="event.stopPropagation(); removeRule('${escAttr(rule)}')">&times;</span>` : ''}
-        </div>`;
-    });
-
-    container.innerHTML = html;
-    updateMirrorPreview();
-}
-
-function toggleRule(rule) {
-    const idx = state.mirrorRules.indexOf(rule);
-    if (idx !== -1) {
-        if (state.mirrorRules.length > 1) {
-            state.mirrorRules.splice(idx, 1);
-        } else {
-            logMessage('Cannot remove last rule', 'err');
-            return;
-        }
-    } else {
-        state.mirrorRules.push(rule);
-    }
-    renderRuleToggles();
-    renderPlaylist();
-    saveProject();
-}
-
-function removeRule(rule) {
-    const idx = state.mirrorRules.indexOf(rule);
-    if (idx !== -1 && state.mirrorRules.length > 1) {
-        state.mirrorRules.splice(idx, 1);
-    }
-    renderRuleToggles();
-    renderPlaylist();
-    saveProject();
-}
-
-function addCustomRule() {
-    const input = document.getElementById('mirrorRuleInput');
-    const rule = input.value.trim();
-    if (!rule || !rule.includes('{name}')) {
-        logMessage('Rule must contain {name} placeholder', 'err');
-        return;
-    }
-    if (!state.mirrorRules.includes(rule)) {
-        state.mirrorRules.push(rule);
-    }
-    input.value = '';
-    renderRuleToggles();
-    renderPlaylist();
-    saveProject();
-    logMessage('Added rule: ' + rule, 'ok');
-}
-
-function sendMirrorRules() {
-    const rulesStr = state.mirrorRules.join(RULE_SEP);
-    sendCommand('MIRROR|' + rulesStr);
-    logMessage('Sent ' + state.mirrorRules.length + ' mirror rules to controller', 'ok');
-}
-
-function updateMirrorPreview() {
-    const input = document.getElementById('mirrorTestInput').value || 'dance1';
-    const container = document.getElementById('mirrorPreviewResult');
-    if (state.mirrorRules.length === 0) {
-        container.innerHTML = '<span style="color:#888">No rules active</span>';
-        return;
-    }
-    const names = getAllMirrorNames(input);
-    container.innerHTML = names.map((n, i) =>
-        `<span style="color:#8cf">${escHtml(n)}</span><span style="color:#555; font-size:10px;"> (rule ${i+1})</span>`
-    ).join('<br>');
 }
 
 function escAttr(str) {
@@ -575,9 +445,6 @@ async function connectToController() {
         dot.className = 'status-dot connected';
         status.textContent = 'Connected';
         logMessage('Connected to controller', 'ok');
-
-        // Also send current mirror rules
-        sendMirrorRules();
     } catch (e) {
         dot.className = 'status-dot error';
         status.textContent = 'Error: ' + e.message;
@@ -920,7 +787,7 @@ function removeFromLibrary(id) {
 function addLibItemToPlaylist(id) {
     const item = state.library.find(lib => lib.id === id);
     if (!item) return;
-    state.playlist.push({ name: item.name, duration: item.duration || 30 });
+    state.playlist.push({ name: item.name, duration: item.duration || 30, pairedWith: item.pairedWith || '' });
     renderPlaylist();
     updateTransport();
     saveProject();
@@ -931,7 +798,7 @@ function addAllFilteredToPlaylist() {
     const filtered = getFilteredLibrary();
     if (filtered.length === 0) { logMessage('No animations to add', 'info'); return; }
     filtered.forEach(item => {
-        state.playlist.push({ name: item.name, duration: item.duration || 30 });
+        state.playlist.push({ name: item.name, duration: item.duration || 30, pairedWith: item.pairedWith || '' });
     });
     renderPlaylist();
     updateTransport();
@@ -1120,13 +987,15 @@ function renderPlaylist() {
     }
 
     tbody.innerHTML = state.playlist.map((item, i) => {
-        const mirrorNames = getAllMirrorNames(item.name);
-        const mirrorDisplay = mirrorNames.map(n => escHtml(n)).join(' / ');
+        const pair = item.pairedWith || '';
+        const pairDisplay = pair && pair !== item.name
+            ? '<span class="mirror-name">' + escHtml(pair) + '</span>'
+            : '<span style="color:#555">same</span>';
         const isActive = i === state.playIdx;
         return `<tr class="${isActive ? 'active' : ''}" data-idx="${i}">
             <td>${i + 1}</td>
             <td>${escHtml(item.name)}</td>
-            <td class="mirror-name" title="${mirrorNames.join('\n')}">${mirrorDisplay}</td>
+            <td>${pairDisplay}</td>
             <td>${item.duration}s</td>
             <td>
                 <div class="move-btns" style="display:inline-flex; gap:2px;">
@@ -1150,7 +1019,7 @@ function addToPlaylist() {
         return;
     }
 
-    state.playlist.push({ name, duration: dur });
+    state.playlist.push({ name, duration: dur, pairedWith: '' });
     nameInput.value = '';
     renderPlaylist();
     saveProject();
@@ -1190,8 +1059,11 @@ function clearPlaylist() {
 }
 
 function buildPlaylistCommand() {
-    // Build PLAYLIST|name:dur|name:dur|... format (includes durations)
-    return 'PLAYLIST|' + state.playlist.map(p => p.name + ':' + (p.duration || 0)).join('|');
+    // Build PLAYLIST|orig,pair:dur|... format (includes pairing + durations)
+    return 'PLAYLIST|' + state.playlist.map(p => {
+        const pair = p.pairedWith || p.name;
+        return p.name + ',' + pair + ':' + (p.duration || 0);
+    }).join('|');
 }
 
 function sendPlaylist() {
@@ -1438,7 +1310,6 @@ function saveProject() {
         const data = {
             version: state.version,
             controllerUrl: state.controllerUrl,
-            mirrorRules: state.mirrorRules,
             slots: state.slots,
             playlist: state.playlist,
             playIdx: state.playIdx,
@@ -1458,14 +1329,6 @@ function loadProject() {
         const data = JSON.parse(raw);
         state.version = 3;
         state.controllerUrl = data.controllerUrl || '';
-        // Migrate from v1 (single rule) to v2+ (multiple rules)
-        if (data.mirrorRules) {
-            state.mirrorRules = data.mirrorRules;
-        } else if (data.mirrorRule) {
-            state.mirrorRules = [data.mirrorRule];
-        } else {
-            state.mirrorRules = [...DEFAULT_RULES];
-        }
         state.slots = data.slots || [];
         state.playlist = data.playlist || [];
         state.playIdx = data.playIdx || 0;
@@ -1476,10 +1339,13 @@ function loadProject() {
         state.savedPlaylists = data.savedPlaylists || [];
         state.libraryFilterTag = '';
         state.librarySearchText = '';
+        // Migrate: ensure all library items have pairedWith field
+        state.library.forEach(item => {
+            if (typeof item.pairedWith !== 'string') item.pairedWith = '';
+        });
 
         // Restore UI
         document.getElementById('urlInput').value = state.controllerUrl;
-        renderRuleToggles();
         renderGroups();
         renderPlaylist();
         updateTransport();
@@ -1502,7 +1368,6 @@ function loadProject() {
 function exportProject() {
     const data = {
         version: state.version,
-        mirrorRules: state.mirrorRules,
         slots: state.slots,
         playlist: state.playlist,
         scannedAvatars: state.scannedAvatars,
@@ -1529,13 +1394,6 @@ function importProject() {
         reader.onload = function () {
             try {
                 const data = JSON.parse(reader.result);
-                if (data.mirrorRules) {
-                    state.mirrorRules = data.mirrorRules;
-                } else if (data.mirrorRule) {
-                    state.mirrorRules = [data.mirrorRule];
-                } else {
-                    state.mirrorRules = [...DEFAULT_RULES];
-                }
                 state.slots = data.slots || [];
                 state.playlist = data.playlist || [];
                 state.playIdx = 0;
@@ -1545,8 +1403,10 @@ function importProject() {
                 state.savedPlaylists = data.savedPlaylists || [];
                 state.libraryFilterTag = '';
                 state.librarySearchText = '';
+                state.library.forEach(item => {
+                    if (typeof item.pairedWith !== 'string') item.pairedWith = '';
+                });
 
-                renderRuleToggles();
                 renderGroups();
                 renderPlaylist();
                 updateTransport();
@@ -1569,13 +1429,10 @@ function newProject() {
     if (!confirm('Start a new project? Current state will be cleared.')) return;
     initState();
     document.getElementById('urlInput').value = '';
-    state.mirrorRules = [...DEFAULT_RULES];
-    document.getElementById('mirrorRuleInput').value = '';
     document.getElementById('statusDot').className = 'status-dot disconnected';
     document.getElementById('connStatus').textContent = 'Not connected';
     document.getElementById('avatarList').innerHTML = '<div style="color:#555; font-size:11px;">Click Scan to find nearby avatars</div>';
     document.getElementById('libSearchInput').value = '';
-    renderRuleToggles();
     renderGroups();
     renderPlaylist();
     updateTransport();
@@ -1624,14 +1481,13 @@ document.addEventListener('keydown', function (e) {
 
 initState();
 loadProject();
-renderRuleToggles();
 renderGroups();
 renderPlaylist();
 updateTransport();
 renderLibrary();
 renderTagFilter();
 renderSavedPlaylistSelect();
-logMessage('Mirror Sync Dance Controller v1.5 ready', 'info');
+logMessage('Mirror Sync Dance Controller v1.9 ready', 'info');
 </script>
 </body>
 </html>

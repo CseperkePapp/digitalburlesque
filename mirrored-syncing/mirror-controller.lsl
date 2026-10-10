@@ -1,4 +1,4 @@
-// Mirror Sync Dance Controller v1.7
+// Mirror Sync Dance Controller v1.9
 // Place in a prim at your dance area.
 // Also place: mirror-slot 1 through mirror-slot 8, plus all dance animations
 // (both original and mirrored versions).
@@ -32,10 +32,8 @@ integer g_playIdx = 0;
 integer g_playing = FALSE;
 string g_currentAnim = "";
 
-// Mirror rules — multiple rules, tried in order; persisted in object description
-// separated by ";;". Tries each rule against inventory, uses first match.
-list g_mirrorRules = ["{name}_Mirror", "{name} (mirror)", "{name} [M]", "{name} (Mirrored)", "{name} Mirror", "{name} [Mirrored]"];
-string RULE_SEP = ";;";
+// Explicit pairing — parallel list to g_playlist for Group B animations
+list g_playlistB = [];
 
 // Sensor / scan results (transient)
 list g_scannedKeys;
@@ -49,6 +47,8 @@ integer g_ncLine = 0;
 // Duration-aware playback
 list g_playDurations = [];    // parallel to g_playlist — seconds per anim (0 = manual)
 integer g_autoAdvance = FALSE; // auto-advance mode on/off
+float g_trackStart = 0.0;    // llGetTime() when current track started (drift-safe)
+float g_trackDur = 0.0;      // expected duration of current track
 
 // Menu system
 integer g_menuChan;
@@ -74,36 +74,25 @@ initSlots()
     }
 }
 
-// Derive mirrored animation name — tries each rule in order,
-// returns the first derived name found in prim inventory.
-// Falls back to first rule's result if nothing found.
-string getMirrorName(string animName)
+// Find a paired/mirrored animation in prim inventory.
+// Tries common mirror naming patterns and returns the first match.
+// Falls back to the original name if no mirror variant found.
+string findPairInInventory(string animName)
 {
-    string fallback = "";
-    integer i;
-    integer count = llGetListLength(g_mirrorRules);
-    for (i = 0; i < count; i++)
-    {
-        string rule = llList2String(g_mirrorRules, i);
-        integer idx = llSubStringIndex(rule, "{name}");
-        string derived;
-        if (idx == -1)
-            derived = animName;
-        else
-        {
-            string before = "";
-            string after = "";
-            if (idx > 0) before = llGetSubString(rule, 0, idx - 1);
-            integer endIdx = idx + 5;
-            if (endIdx < llStringLength(rule) - 1)
-                after = llGetSubString(rule, endIdx + 1, -1);
-            derived = before + animName + after;
-        }
-        if (i == 0) fallback = derived;
-        if (llGetInventoryType(derived) == INVENTORY_ANIMATION)
-            return derived;
-    }
-    return fallback;
+    string t;
+    t = animName + "_Mirror";
+    if (llGetInventoryType(t) == INVENTORY_ANIMATION) return t;
+    t = animName + " (mirror)";
+    if (llGetInventoryType(t) == INVENTORY_ANIMATION) return t;
+    t = animName + " [M]";
+    if (llGetInventoryType(t) == INVENTORY_ANIMATION) return t;
+    t = animName + " (Mirrored)";
+    if (llGetInventoryType(t) == INVENTORY_ANIMATION) return t;
+    t = animName + " Mirror";
+    if (llGetInventoryType(t) == INVENTORY_ANIMATION) return t;
+    t = animName + " [Mirrored]";
+    if (llGetInventoryType(t) == INVENTORY_ANIMATION) return t;
+    return animName;
 }
 
 // Find first empty slot, returns 0 if none available
@@ -185,7 +174,9 @@ playCurrentAnim()
         g_playIdx = 0;
 
     g_currentAnim = llList2String(g_playlist, g_playIdx);
-    string mirrorAnim = getMirrorName(g_currentAnim);
+    string mirrorAnim = g_currentAnim;
+    if (llGetListLength(g_playlistB) > g_playIdx)
+        mirrorAnim = llList2String(g_playlistB, g_playIdx);
 
     integer i;
     for (i = 0; i < MAX_SLOTS; i++)
@@ -206,14 +197,20 @@ playCurrentAnim()
 
     g_playing = TRUE;
 
-    // Auto-advance timer
+    // Auto-advance: tick-based for drift safety
     if (g_autoAdvance && llGetListLength(g_playDurations) > g_playIdx)
     {
-        float dur = llList2Float(g_playDurations, g_playIdx);
-        if (dur > 0.0)
-            llSetTimerEvent(dur);
+        g_trackDur = llList2Float(g_playDurations, g_playIdx);
+        if (g_trackDur > 0.0)
+        {
+            g_trackStart = llGetTime();
+            llSetTimerEvent(0.5);
+        }
         else
+        {
+            g_trackDur = 0.0;
             llSetTimerEvent(0.0);
+        }
     }
 
     updateHovertext();
@@ -224,6 +221,7 @@ stopAllAnims()
 {
     llMessageLinked(LINK_THIS, 0, "STOPALL", "");
     g_playing = FALSE;
+    g_trackDur = 0.0;
     llSetTimerEvent(0.0);
     updateHovertext();
 }
@@ -307,19 +305,6 @@ string getStatusString()
     }
 
     return out;
-}
-
-// Persist mirror rules in object description (separated by ";;")
-saveMirrorRules()
-{
-    llSetObjectDesc(llDumpList2String(g_mirrorRules, RULE_SEP));
-}
-
-loadMirrorRules()
-{
-    string desc = llGetObjectDesc();
-    if (desc != "" && desc != "(No Description)" && llSubStringIndex(desc, "{name}") != -1)
-        g_mirrorRules = llParseString2List(desc, [RULE_SEP], []);
 }
 
 // ============================================================================
@@ -453,6 +438,16 @@ showNotecardMenu(key user)
     openMenu(user, title, buttons);
 }
 
+// Parse duration string — supports both "32.6" (seconds) and "1:32.6" (mm:ss)
+float parseDuration(string s)
+{
+    integer ci = llSubStringIndex(s, ":");
+    if (ci > 0)
+        return (float)llGetSubString(s, 0, ci - 1) * 60.0
+             + (float)llGetSubString(s, ci + 1, -1);
+    return (float)s;
+}
+
 // Check if an animation name looks like a mirror derivative (simple suffix check)
 integer isMirrorName(string animName)
 {
@@ -477,6 +472,7 @@ startReadNotecard(string name)
     g_ncName = name;
     g_ncLine = 0;
     g_playlist = [];
+    g_playlistB = [];
     g_playDurations = [];
     g_playIdx = 0;
     g_ncReqId = llGetNotecardLine(name, 0);
@@ -486,6 +482,7 @@ startReadNotecard(string name)
 loadPlaylistFromInventory()
 {
     g_playlist = [];
+    g_playlistB = [];
     g_playDurations = [];
     integer count = llGetInventoryNumber(INVENTORY_ANIMATION);
     integer i;
@@ -493,7 +490,10 @@ loadPlaylistFromInventory()
     {
         string name = llGetInventoryName(INVENTORY_ANIMATION, i);
         if (!isMirrorName(name))
+        {
             g_playlist += [name];
+            g_playlistB += [findPairInInventory(name)];
+        }
     }
     g_playIdx = 0;
 }
@@ -507,13 +507,12 @@ default
     state_entry()
     {
         initSlots();
-        loadMirrorRules();
 
         llSetText("Mirror Sync Dance\nRequesting URL...", <1, 1, 0>, 1.0);
         g_urlReqId = llRequestURL();
 
         updateHovertext();
-        llOwnerSay("Mirror Sync Dance Controller v1.7 ready");
+        llOwnerSay("Mirror Sync Dance Controller v1.9 ready");
     }
 
     // ========================================================================
@@ -554,6 +553,15 @@ default
         if (body == "STATUS")
         {
             llHTTPResponse(id, 200, getStatusString());
+            return;
+        }
+
+        // --- PING: diagnostic heartbeat ---
+        if (body == "PING")
+        {
+            llHTTPResponse(id, 200, "PONG|" + (string)llGetTime()
+                + "|" + (string)g_playIdx + "|" + (string)g_playing
+                + "|" + (string)g_autoAdvance);
             return;
         }
 
@@ -601,37 +609,36 @@ default
             return;
         }
 
-        // --- MIRROR|rule1;;rule2;;... ---
-        if (llSubStringIndex(body, "MIRROR|") == 0)
-        {
-            g_mirrorRules = llParseString2List(llGetSubString(body, 7, -1), [RULE_SEP], []);
-            saveMirrorRules();
-            llHTTPResponse(id, 200, "OK");
-            updateHovertext();
-            return;
-        }
-
-        // --- PLAYLIST|name1:dur1|name2:dur2|... (duration optional) ---
+        // --- PLAYLIST|orig,pair:dur|... (pair and duration optional) ---
         if (llSubStringIndex(body, "PLAYLIST|") == 0)
         {
             list parts = llParseString2List(llGetSubString(body, 9, -1), ["|"], []);
             g_playlist = [];
+            g_playlistB = [];
             g_playDurations = [];
             integer p;
             for (p = 0; p < llGetListLength(parts); p++)
             {
                 string entry = llList2String(parts, p);
+                string namePart = entry;
+                float dur = 0.0;
                 integer colonIdx = llSubStringIndex(entry, ":");
                 if (colonIdx > 0)
                 {
-                    g_playlist += [llGetSubString(entry, 0, colonIdx - 1)];
-                    g_playDurations += [(float)llGetSubString(entry, colonIdx + 1, -1)];
+                    namePart = llGetSubString(entry, 0, colonIdx - 1);
+                    dur = parseDuration(llGetSubString(entry, colonIdx + 1, -1));
                 }
-                else
+                string orig = namePart;
+                string pair = namePart;
+                integer commaIdx = llSubStringIndex(namePart, ",");
+                if (commaIdx > 0)
                 {
-                    g_playlist += [entry];
-                    g_playDurations += [0.0];
+                    orig = llGetSubString(namePart, 0, commaIdx - 1);
+                    pair = llGetSubString(namePart, commaIdx + 1, -1);
                 }
+                g_playlist += [orig];
+                g_playlistB += [pair];
+                g_playDurations += [dur];
             }
             g_playIdx = 0;
             llHTTPResponse(id, 200, "Playlist: " + (string)llGetListLength(g_playlist));
@@ -656,15 +663,20 @@ default
                 g_autoAdvance = TRUE;
                 if (g_playing && llGetListLength(g_playDurations) > g_playIdx)
                 {
-                    float dur = llList2Float(g_playDurations, g_playIdx);
-                    if (dur > 0.0) llSetTimerEvent(dur);
+                    g_trackDur = llList2Float(g_playDurations, g_playIdx);
+                    if (g_trackDur > 0.0)
+                    {
+                        g_trackStart = llGetTime();
+                        llSetTimerEvent(0.5);
+                    }
                 }
                 llHTTPResponse(id, 200, "Auto ON");
             }
             else
             {
                 g_autoAdvance = FALSE;
-                if (!g_playing) llSetTimerEvent(0.0);
+                g_trackDur = 0.0;
+                llSetTimerEvent(0.0);
                 llHTTPResponse(id, 200, "Auto OFF");
             }
             updateHovertext();
@@ -714,6 +726,7 @@ default
                     releaseSlot(i + 1);
             }
             g_playlist = [];
+            g_playlistB = [];
             g_playDurations = [];
             g_playIdx = 0;
             g_currentAnim = "";
@@ -845,14 +858,19 @@ default
                 g_autoAdvance = TRUE;
                 if (g_playing && llGetListLength(g_playDurations) > g_playIdx)
                 {
-                    float dur = llList2Float(g_playDurations, g_playIdx);
-                    if (dur > 0.0) llSetTimerEvent(dur);
+                    g_trackDur = llList2Float(g_playDurations, g_playIdx);
+                    if (g_trackDur > 0.0)
+                    {
+                        g_trackStart = llGetTime();
+                        llSetTimerEvent(0.5);
+                    }
                 }
                 showMainMenu(id);
             }
             else if (message == "Auto: OFF")
             {
                 g_autoAdvance = FALSE;
+                g_trackDur = 0.0;
                 llSetTimerEvent(0.0);
                 showMainMenu(id);
             }
@@ -866,6 +884,7 @@ default
                         releaseSlot(i + 1);
                 }
                 g_playlist = [];
+                g_playlistB = [];
                 g_playDurations = [];
                 g_playIdx = 0;
                 g_currentAnim = "";
@@ -1070,6 +1089,7 @@ default
             if (message == "Clear List")
             {
                 g_playlist = [];
+                g_playlistB = [];
                 g_playDurations = [];
                 g_playIdx = 0;
                 updateHovertext();
@@ -1124,11 +1144,9 @@ default
                 if (g_playing && g_currentAnim != "")
                 {
                     integer group = llList2Integer(g_slotGroups, num - 1);
-                    string animToPlay;
-                    if (group == 2)
-                        animToPlay = getMirrorName(g_currentAnim);
-                    else
-                        animToPlay = g_currentAnim;
+                    string animToPlay = g_currentAnim;
+                    if (group == 2 && llGetListLength(g_playlistB) > g_playIdx)
+                        animToPlay = llList2String(g_playlistB, g_playIdx);
                     llMessageLinked(LINK_THIS, num, "ANIM|" + animToPlay, "");
                 }
             }
@@ -1163,21 +1181,32 @@ default
         }
 
         // Process line: trim, skip empty/comments/mirror names
-        // Supports name:duration format (e.g. "Bento Cabaret 1:32.6")
+        // Supports name,pair:duration format (e.g. "Bento Cabaret 1,Bento Cabaret 1_Mirror:32.6")
+        // Also supports name:duration (auto-pairs from inventory)
         string trimmed = llStringTrim(data, STRING_TRIM);
         if (trimmed != "" && llGetSubString(trimmed, 0, 0) != "#")
         {
             string animName = trimmed;
+            string pairName;
             float dur = 0.0;
             integer colonIdx = llSubStringIndex(trimmed, ":");
             if (colonIdx > 0)
             {
                 animName = llGetSubString(trimmed, 0, colonIdx - 1);
-                dur = (float)llGetSubString(trimmed, colonIdx + 1, -1);
+                dur = parseDuration(llGetSubString(trimmed, colonIdx + 1, -1));
             }
+            integer commaIdx = llSubStringIndex(animName, ",");
+            if (commaIdx > 0)
+            {
+                pairName = llGetSubString(animName, commaIdx + 1, -1);
+                animName = llGetSubString(animName, 0, commaIdx - 1);
+            }
+            else
+                pairName = findPairInInventory(animName);
             if (!isMirrorName(animName))
             {
                 g_playlist += [animName];
+                g_playlistB += [pairName];
                 g_playDurations += [dur];
             }
         }
@@ -1194,7 +1223,9 @@ default
     {
         if (g_playing && g_autoAdvance)
         {
-            advancePlaylist(1);
+            if (g_trackDur > 0.0 && (llGetTime() - g_trackStart) >= g_trackDur)
+                advancePlaylist(1);
+            // else: tick not elapsed yet, timer fires again in 0.5s
         }
         else
         {

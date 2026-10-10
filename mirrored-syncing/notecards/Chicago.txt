@@ -1,5 +1,5 @@
 # Chicago (10 dances)
-# Duration-aware — auto-advance supported
+# v1.9 format: name:duration (pairs auto-detected from inventory)
 Chicago 1:32.6
 Chicago 2:30
 Chicago 3:30.3

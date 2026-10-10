@@ -126,7 +126,7 @@
 
 <!-- TOOLBAR -->
 <div id="toolbar">
-    <h1>Dance Database Manager v1.6</h1>
+    <h1>Dance Database Manager v1.9</h1>
     <div class="actions">
         <button onclick="openBulkImport()">Bulk Import</button>
         <button onclick="openCsvImport()">CSV Import</button>
@@ -162,11 +162,12 @@
             <table id="dbTable">
                 <thead>
                     <tr>
-                        <th onclick="sortDatabase('name')" style="width:35%;">Name <span class="sort-arrow" id="sortName"></span></th>
-                        <th onclick="sortDatabase('duration')" style="width:10%;">Dur(s) <span class="sort-arrow" id="sortDuration"></span></th>
-                        <th style="width:18%;">Location</th>
-                        <th onclick="sortDatabase('tags')" style="width:24%;">Tags <span class="sort-arrow" id="sortTags"></span></th>
-                        <th style="width:13%;"></th>
+                        <th onclick="sortDatabase('name')" style="width:25%;">Name <span class="sort-arrow" id="sortName"></span></th>
+                        <th onclick="sortDatabase('duration')" style="width:8%;">Dur(s) <span class="sort-arrow" id="sortDuration"></span></th>
+                        <th onclick="sortDatabase('pairedWith')" style="width:22%;">Paired With <span class="sort-arrow" id="sortPairedWith"></span></th>
+                        <th style="width:14%;">Location</th>
+                        <th onclick="sortDatabase('tags')" style="width:20%;">Tags <span class="sort-arrow" id="sortTags"></span></th>
+                        <th style="width:11%;"></th>
                     </tr>
                 </thead>
                 <tbody id="dbBody"></tbody>
@@ -190,6 +191,11 @@
             <button class="btn-small" onclick="bulkSetLocation('inventory')" style="background:#3a3a1a;border-color:#5a5a2a;color:#cc8;">Inventory</button>
             <button class="btn-small" onclick="bulkSetLocation('notecard')" style="background:#1a2a4a;border-color:#2a3a6a;color:#8ac;">Notecard</button>
             <button class="btn-small" onclick="bulkClearLocation()">Clear Loc.</button>
+        </div>
+        <div class="add-row" style="margin-top:4px;">
+            <span style="font-size:10px; color:#888;">Pairing:</span>
+            <button class="btn-small btn-primary" onclick="autoPairAll()">Auto-pair All</button>
+            <button class="btn-small" onclick="clearAllPairs()">Clear Pairs</button>
         </div>
     </div>
 
@@ -220,9 +226,10 @@
                 <thead>
                     <tr>
                         <th style="width:8%;">#</th>
-                        <th style="width:52%;">Name</th>
-                        <th style="width:18%;">Dur(s)</th>
-                        <th style="width:22%;"></th>
+                        <th style="width:35%;">Name</th>
+                        <th style="width:25%;">Paired</th>
+                        <th style="width:14%;">Dur(s)</th>
+                        <th style="width:18%;"></th>
                     </tr>
                 </thead>
                 <tbody id="plBody"></tbody>
@@ -296,6 +303,9 @@ Dakota_BurlesqueDance01_PARAGON, 28.05
     </div>
 </div>
 
+<!-- PAIR SUGGESTIONS DATALIST -->
+<datalist id="pairSuggestions"></datalist>
+
 <!-- NOTECARD EXPORT MODAL -->
 <div class="modal-overlay" id="notecardModal">
     <div class="modal">
@@ -321,7 +331,6 @@ const STORAGE_KEY = 'mirrorSyncProject';
 let state = {
     version: 3,
     controllerUrl: '',
-    mirrorRules: ['{name}_Mirror', '{name} (mirror)', '{name} [M]', '{name} (Mirrored)', '{name} Mirror', '{name} [Mirrored]'],
     slots: [],
     playlist: [],
     playIdx: 0,
@@ -351,16 +360,16 @@ function loadState() {
         const data = JSON.parse(raw);
         state.version = 3;
         state.controllerUrl = data.controllerUrl || '';
-        state.mirrorRules = data.mirrorRules || state.mirrorRules;
         state.slots = data.slots || [];
         state.playlist = data.playlist || [];
         state.playIdx = data.playIdx || 0;
         state.playing = data.playing || false;
         state.scannedAvatars = data.scannedAvatars || [];
         state.library = data.library || [];
-        // Migrate: ensure all library items have a locations array
+        // Migrate: ensure all library items have locations array and pairedWith field
         state.library.forEach(item => {
             if (!Array.isArray(item.locations)) item.locations = [];
+            if (typeof item.pairedWith !== 'string') item.pairedWith = '';
         });
         state.savedPlaylists = data.savedPlaylists || [];
     } catch (e) { /* ignore */ }
@@ -371,7 +380,6 @@ function saveState() {
         const data = {
             version: state.version,
             controllerUrl: state.controllerUrl,
-            mirrorRules: state.mirrorRules,
             slots: state.slots,
             playlist: state.playlist,
             playIdx: state.playIdx,
@@ -454,6 +462,7 @@ function getFilteredLibrary() {
         let va, vb;
         if (sortCol === 'name') { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
         else if (sortCol === 'duration') { va = a.duration || 0; vb = b.duration || 0; }
+        else if (sortCol === 'pairedWith') { va = (a.pairedWith || '').toLowerCase(); vb = (b.pairedWith || '').toLowerCase(); }
         else if (sortCol === 'tags') { va = a.tags.join(','); vb = b.tags.join(','); }
         else { va = a.name; vb = b.name; }
         if (va < vb) return -sortDir;
@@ -477,6 +486,7 @@ function renderTagFilter() {
 function renderSortArrows() {
     document.getElementById('sortName').textContent = sortCol === 'name' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
     document.getElementById('sortDuration').textContent = sortCol === 'duration' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
+    document.getElementById('sortPairedWith').textContent = sortCol === 'pairedWith' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
     document.getElementById('sortTags').textContent = sortCol === 'tags' ? (sortDir === 1 ? '\u25B2' : '\u25BC') : '';
 }
 
@@ -489,7 +499,7 @@ function renderDatabase() {
     renderSortArrows();
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:#555; text-align:center; padding:20px;">No animations. Use Bulk Import or add below.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#555; text-align:center; padding:20px;">No animations. Use Bulk Import or add below.</td></tr>';
         return;
     }
 
@@ -504,9 +514,13 @@ function renderDatabase() {
             + '<span class="loc-badge loc-inventory' + (locs.includes('inventory') ? ' active' : '') + '" onclick="event.stopPropagation(); toggleLocation(\'' + escAttr(item.id) + '\', \'inventory\')" title="In Inventory">I</span>'
             + '<span class="loc-badge loc-notecard' + (locs.includes('notecard') ? ' active' : '') + '" onclick="event.stopPropagation(); toggleLocation(\'' + escAttr(item.id) + '\', \'notecard\')" title="In Notecard">N</span>'
             + '</div>';
+        const pairDisplay = item.pairedWith
+            ? '<span style="color:#6af;" title="' + escAttr(item.pairedWith) + '">' + escHtml(item.pairedWith) + '</span>'
+            : '<span style="color:#555;">-</span>';
         return '<tr ondblclick="addToPlaylistFromDb(\'' + escAttr(item.id) + '\')">'
             + '<td title="' + escAttr(item.name) + '">' + escHtml(item.name) + '</td>'
             + '<td class="editable" onclick="editDuration(\'' + escAttr(item.id) + '\', this)">' + (item.duration || 30) + '</td>'
+            + '<td class="editable" onclick="editPairedWith(\'' + escAttr(item.id) + '\', this)">' + pairDisplay + '</td>'
             + '<td>' + locBadges + '</td>'
             + '<td>' + tags + ' <span class="tag-pill" style="background:#333;color:#888;cursor:pointer;" onclick="promptAddTag(\'' + escAttr(item.id) + '\')">+</span></td>'
             + '<td style="text-align:right;">'
@@ -547,7 +561,8 @@ function addAnimation() {
             name: name,
             tags: tag ? [tag] : [],
             duration: dur,
-            locations: []
+            locations: [],
+            pairedWith: ''
         });
         setStatus('Added "' + name + '"');
     }
@@ -607,6 +622,61 @@ function promptAddTag(id) {
         renderDatabase();
         renderTagFilter();
     }
+}
+
+// ============================================================================
+// PAIRING
+// ============================================================================
+
+function editPairedWith(id, td) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    const current = item.pairedWith || '';
+    td.innerHTML = '<input type="text" class="edit-input" value="' + escAttr(current) + '" placeholder="Animation name or empty" '
+        + 'onblur="savePairedWith(\'' + escAttr(id) + '\', this.value)" '
+        + 'onkeydown="if(event.key===\'Enter\')this.blur(); if(event.key===\'Escape\'){this.value=\'' + escAttr(current) + '\';this.blur();}" '
+        + 'list="pairSuggestions">';
+    td.querySelector('input').focus();
+    td.querySelector('input').select();
+}
+
+function savePairedWith(id, value) {
+    const item = state.library.find(lib => lib.id === id);
+    if (!item) return;
+    item.pairedWith = value.trim();
+    saveState();
+    renderDatabase();
+    setStatus('Pair updated: ' + item.name + ' -> ' + (item.pairedWith || '(none)'));
+}
+
+function autoPairAll() {
+    const suffixes = ['_Mirror', ' (mirror)', ' [M]', ' (Mirrored)', ' Mirror', ' [Mirrored]'];
+    const nameSet = new Set(state.library.map(item => item.name));
+    let paired = 0;
+    let skipped = 0;
+    state.library.forEach(item => {
+        if (item.pairedWith) { skipped++; return; } // already paired, don't overwrite
+        for (const suffix of suffixes) {
+            const candidate = item.name + suffix;
+            if (nameSet.has(candidate)) {
+                item.pairedWith = candidate;
+                paired++;
+                return;
+            }
+        }
+    });
+    saveState();
+    renderDatabase();
+    setStatus('Auto-pair: ' + paired + ' paired, ' + skipped + ' already had pairs');
+}
+
+function clearAllPairs() {
+    const filtered = getFilteredLibrary();
+    if (filtered.length === 0) return;
+    filtered.forEach(item => { item.pairedWith = ''; });
+    saveState();
+    renderDatabase();
+    setStatus('Cleared pairs for ' + filtered.length + ' animations');
 }
 
 // ============================================================================
@@ -701,7 +771,7 @@ function executeBulkImport() {
         } else {
             state.library.push({
                 id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + added,
-                name: p.name, tags: p.tag ? [p.tag] : [], duration: 30, locations: []
+                name: p.name, tags: p.tag ? [p.tag] : [], duration: 30, locations: [], pairedWith: ''
             });
             added++;
         }
@@ -1014,7 +1084,8 @@ function applyDefaultTimesToState() {
                 name: e.name,
                 tags: e.tag ? [e.tag] : [],
                 duration: e.duration || 30,
-                locations: []
+                locations: [],
+                pairedWith: ''
             });
         });
         changed = true;
@@ -1109,7 +1180,7 @@ function executeCsvImport() {
         } else {
             state.library.push({
                 id: 'lib_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '_' + added,
-                name: p.name, tags: p.tag ? [p.tag] : [], duration: p.duration || 30, locations: []
+                name: p.name, tags: p.tag ? [p.tag] : [], duration: p.duration || 30, locations: [], pairedWith: ''
             });
             added++;
         }
@@ -1140,18 +1211,22 @@ function renderPlaylist() {
     const tbody = document.getElementById('plBody');
 
     if (currentPlaylist.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="color:#555; text-align:center; padding:20px;">Double-click an animation to add it</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#555; text-align:center; padding:20px;">Double-click an animation to add it</td></tr>';
         document.getElementById('plTotal').textContent = 'Empty playlist';
         return;
     }
 
     tbody.innerHTML = currentPlaylist.map((item, i) => {
         const warn = (item.inPrim === false) ? ' <span class="loc-warn" title="Not marked as In Prim">!</span>' : '';
+        const pairDisplay = item.pairedWith && item.pairedWith !== item.name
+            ? '<span style="color:#6af;font-size:11px;" title="' + escAttr(item.pairedWith) + '">' + escHtml(item.pairedWith) + '</span>'
+            : '<span style="color:#555;font-size:11px;">same</span>';
         return '<tr draggable="true" data-idx="' + i + '" '
             + 'ondragstart="plDragStart(event, ' + i + ')" ondragend="plDragEnd(event)" '
             + 'ondragover="plDragOver(event)" ondrop="plDrop(event, ' + i + ')">'
             + '<td>' + (i + 1) + '</td>'
             + '<td>' + escHtml(item.name) + warn + '</td>'
+            + '<td>' + pairDisplay + '</td>'
             + '<td class="editable" onclick="editPlaylistDuration(' + i + ', this)">' + (item.duration || 30) + '</td>'
             + '<td style="text-align:right;">'
             + '<button class="btn-small" onclick="movePlaylistItem(' + i + ', -1)" title="Move up">&uarr;</button>'
@@ -1176,7 +1251,7 @@ function addToPlaylistFromDb(id) {
     const item = state.library.find(lib => lib.id === id);
     if (!item) return;
     const inPrim = item.locations && item.locations.includes('prim');
-    currentPlaylist.push({ name: item.name, duration: item.duration || 30, inPrim: inPrim });
+    currentPlaylist.push({ name: item.name, duration: item.duration || 30, pairedWith: item.pairedWith || '', inPrim: inPrim });
     renderPlaylist();
     setStatus('Added "' + item.name + '" to playlist' + (inPrim ? '' : ' (not in prim!)'));
 }
@@ -1188,7 +1263,7 @@ function addAllFilteredToPlaylist() {
     filtered.forEach(item => {
         const inPrim = item.locations && item.locations.includes('prim');
         if (!inPrim) notInPrim++;
-        currentPlaylist.push({ name: item.name, duration: item.duration || 30, inPrim: inPrim });
+        currentPlaylist.push({ name: item.name, duration: item.duration || 30, pairedWith: item.pairedWith || '', inPrim: inPrim });
     });
     renderPlaylist();
     setStatus('Added ' + filtered.length + ' animations to playlist' + (notInPrim > 0 ? ' (' + notInPrim + ' not in prim)' : ''));
@@ -1402,8 +1477,15 @@ function importPlaylistJson() {
 function exportPlaylistNotecard() {
     if (currentPlaylist.length === 0) { setStatus('Playlist is empty'); return; }
     const name = document.getElementById('plName').value.trim() || 'Playlist';
-    const lines = ['# ' + name, '# Exported from Dance Database Manager', ''];
-    currentPlaylist.forEach(item => lines.push(item.name));
+    const lines = ['# ' + name, '# Exported from Dance Database Manager', '# Format: name,pair:duration', ''];
+    currentPlaylist.forEach(item => {
+        const pair = item.pairedWith || '';
+        const dur = item.duration || 30;
+        if (pair && pair !== item.name)
+            lines.push(item.name + ',' + pair + ':' + dur);
+        else
+            lines.push(item.name + ':' + dur);
+    });
     document.getElementById('notecardText').value = lines.join('\n');
     document.getElementById('notecardModal').classList.add('active');
 }
@@ -1422,7 +1504,6 @@ function closeNotecardModal() {
 function exportProject() {
     const data = {
         version: state.version,
-        mirrorRules: state.mirrorRules,
         library: state.library,
         savedPlaylists: state.savedPlaylists
     };
@@ -1467,8 +1548,11 @@ function sendToSL() {
     if (!url) { setStatus('Enter the controller HTTP-in URL'); return; }
     if (currentPlaylist.length === 0) { setStatus('Playlist is empty'); return; }
 
-    // Build PLAYLIST|name:dur|name:dur|... command
-    const parts = currentPlaylist.map(p => p.name + ':' + (p.duration || 30));
+    // Build PLAYLIST|orig,pair:dur|... command (pair defaults to orig if not set)
+    const parts = currentPlaylist.map(p => {
+        const pair = p.pairedWith || p.name;
+        return p.name + ',' + pair + ':' + (p.duration || 30);
+    });
     const command = 'PLAYLIST|' + parts.join('|');
 
     fetch(url, {
@@ -1502,11 +1586,19 @@ document.addEventListener('keydown', function (e) {
 // INIT
 // ============================================================================
 
+function updatePairSuggestions() {
+    const dl = document.getElementById('pairSuggestions');
+    dl.innerHTML = state.library.map(item =>
+        '<option value="' + escAttr(item.name) + '">'
+    ).join('');
+}
+
 function renderAll() {
     renderDatabase();
     renderTagFilter();
     renderPlaylistSelect();
     renderPlaylist();
+    updatePairSuggestions();
 }
 
 loadState();
@@ -1516,13 +1608,13 @@ if (state.controllerUrl) {
     document.getElementById('slUrl').value = state.controllerUrl;
 }
 renderAll();
-setStatus('Dance Database Manager v1.6 ready (' + state.library.length + ' animations, ' + state.savedPlaylists.length + ' saved playlists)');
+setStatus('Dance Database Manager v1.9 ready (' + state.library.length + ' animations, ' + state.savedPlaylists.length + ' saved playlists)');
 
 // Optionally apply additional timings derived from the PDF (when hosted over HTTP).
 applyPdfDerivedTimesToState().then(r => {
     if (r && r.changed) {
         renderAll();
-        setStatus('Dance Database Manager v1.6 ready (' + state.library.length + ' animations, ' + state.savedPlaylists.length + ' saved playlists) — applied ' + r.updated + ' PDF timings');
+        setStatus('Dance Database Manager v1.9 ready (' + state.library.length + ' animations, ' + state.savedPlaylists.length + ' saved playlists) — applied ' + r.updated + ' PDF timings');
     }
 });
 </script>

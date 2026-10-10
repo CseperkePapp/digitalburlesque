@@ -1,5 +1,5 @@
 # Vegas Showgirls (10 dances)
-# Duration-aware — auto-advance supported
+# v1.9 format: name:duration (pairs auto-detected from inventory)
 Vegas_Showgirls_1:29.6
 Vegas_Showgirls_2:37.4
 Vegas_Showgirls_3:29.5

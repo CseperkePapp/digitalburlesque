@@ -1,4 +1,4 @@
-# Mirror Sync Dance System v1.6
+# Mirror Sync Dance System v1.9
 
 Two-group mirrored animation sync for Second Life. Group A plays original animations, Group B plays the mirrored versions — all in sync.
 
@@ -42,31 +42,24 @@ Control via in-world touch menus or the web control page.
 
 **From the web page:** Click Scan to find nearby avatars (or add them manually by name + UUID), then assign them to Group A or Group B.
 
-### Mirror Naming Rules (Multi-Rule Auto-Detect)
+### Animation Pairing (Hybrid: Auto + Manual)
 
-Different animation creators use different naming conventions for mirrored versions. The controller supports **multiple rules** — it tries each one in order and uses the first match found in the prim's inventory.
+Group B needs a paired animation for each Group A animation. The system uses **explicit pairing** — each animation in the database can have a specific `pairedWith` animation set.
 
-All 6 rules are enabled by default — no configuration needed, it just works:
+**Auto-pair:** Click "Auto-pair All" in the Dance Database Manager. This checks 6 common naming patterns and fills in pairs where matches are found in the library:
 
-| Rule | Creator example | Original | Mirrored |
-|------|----------------|----------|----------|
-| `{name}_Mirror` | Vegas Showgirls | `Vegas_Showgirls_1` | `Vegas_Showgirls_1_Mirror` |
-| `{name} (mirror)` | Bento Charleston | `Bento Charleston 1` | `Bento Charleston 1 (mirror)` |
-| `{name} [M]` | Jasmine PARAGON | `Jasmine - Body & Booty Groove 01_PARAGON` | `Jasmine - Body & Booty Groove 01_PARAGON [M]` |
-| `{name} (Mirrored)` | Jortay PARAGON | `Jortay - Heels Dance 08_PARAGON` | `Jortay - Heels Dance 08_PARAGON (Mirrored)` |
-| `{name} Mirror` | Slow Burlesque (Abra) | `Slow_Burlesque_1_Abra` | `Slow_Burlesque_1_Abra Mirror` |
-| `{name} [Mirrored]` | Nicole/Venetia PARAGON | `Nicole - Buttons Heels Dance 01_PARAGON` | `Nicole - Buttons Heels Dance 01_PARAGON [Mirrored]` |
+| Pattern | Example: `Vegas_Showgirls_1` |
+|---------|------------------------------|
+| `{name}_Mirror` | `Vegas_Showgirls_1_Mirror` |
+| `{name} (mirror)` | `Vegas_Showgirls_1 (mirror)` |
+| `{name} [M]` | `Vegas_Showgirls_1 [M]` |
+| `{name} (Mirrored)` | `Vegas_Showgirls_1 (Mirrored)` |
+| `{name} Mirror` | `Vegas_Showgirls_1 Mirror` |
+| `{name} [Mirrored]` | `Vegas_Showgirls_1 [Mirrored]` |
 
-**How it works:** When Group B needs to play an animation, the controller tries each rule in order and checks the prim inventory for a match. The first animation name found is used. For example, with `Bento Charleston 1`:
+**Manual pair:** Click the "Paired With" cell in the database table to type any animation name. This lets you pair completely different dances (e.g., pair a slow dance with a different slow dance).
 
-1. Tries `Bento Charleston 1_Mirror` — not in inventory
-2. Tries `Bento Charleston 1 (mirror)` — found, plays it
-
-You can also add custom rules for other naming conventions via the web page or in-world menu.
-
-**In-world:** Touch > Mirror Rule — click rules to toggle them on/off. Rules are saved in the prim's object description.
-
-**Web page:** Toggle preset rules or add custom ones. Click "Send to SL" to push to the controller.
+**In-world auto-pair:** When loading from inventory or notecards without explicit pairs, the controller tries the same 6 naming patterns against prim inventory.
 
 **Loading playlists from inventory:** The "Load from Inv" button automatically skips mirror-named animations, so only original animations appear in the playlist.
 
@@ -80,7 +73,7 @@ You can also add custom rules for other naming conventions via the web page or i
 
 ### Notecard Playlists
 
-You can store playlists as **notecards** in the controller prim. Drop notecards with any name (e.g. "Playlist 1", "Bento Set", "Show Night") into the prim. Each notecard contains animation names, one per line. **Durations are optional** — append `:seconds` to enable auto-advance for that dance:
+You can store playlists as **notecards** in the controller prim. Drop notecards with any name (e.g. "Playlist 1", "Bento Set", "Show Night") into the prim. Each notecard contains animation names, one per line. **Durations and pairs are optional:**
 
 ```
 # This is a comment (lines starting with # are ignored)
@@ -93,9 +86,12 @@ Bento Cabaret 2
 # With durations (auto-advance):
 Bento Cabaret 3:21.3
 Bento Cabaret 4:27.7
+
+# With explicit pair + duration:
+Bento Cabaret 5,Bento Cabaret 5 (mirror):32.3
 ```
 
-Mirror-named animations in the notecard are automatically skipped (same logic as "Load from Inv").
+When no pair is specified, the controller auto-detects by checking the 6 naming patterns against inventory. Mirror-named animations in the notecard are automatically skipped (same logic as "Load from Inv").
 
 Pre-made notecard files with durations are in the `notecards/` folder — copy the contents into SL notecards and drop them into the controller prim.
 
@@ -107,7 +103,7 @@ Pre-made notecard files with durations are in the `notecards/` folder — copy t
 
 When you hit **Play**:
 - Group A avatars play the original animation name
-- Group B avatars play the mirrored animation name (derived from the rule)
+- Group B avatars play the paired animation (set in the database or auto-detected)
 - All animations start in the same script frame for sync
 
 Use **Next** / **Prev** to advance through the playlist. **Stop** halts all animations. **Reset** stops everything and releases all dancers.
@@ -127,8 +123,9 @@ When durations are set for animations, the controller can **auto-advance** throu
 Open `dance-database.html` in any browser. This is a dedicated page for managing your master animation database and building playlists.
 
 **Features:**
-- **Animation database** — add, edit, remove animations with name, duration (seconds), and tags
-- **Inline editing** — click a duration cell to edit it; click tags to add/remove
+- **Animation database** — add, edit, remove animations with name, duration (seconds), paired animation, and tags
+- **Inline editing** — click a duration or paired-with cell to edit it; click tags to add/remove
+- **Animation pairing** — set which animation Group B plays for each Group A animation. Click "Auto-pair All" to detect mirrors by naming convention, or manually pair any two animations
 - **Location tracking** — mark each animation's location: **P** (In Prim), **I** (In Inventory), **N** (In Notecard). Click the colored badges to toggle. Filter by location to see only what's in the prim, inventory, or notecard — or find animations with no location set
 - **Bulk location actions** — mark all currently filtered animations as Prim/Inventory/Notecard at once, or clear locations in bulk
 - **Playlist warnings** — when building a playlist, animations not marked as "In Prim" show an orange warning indicator, so you know what's missing before sending to SL
@@ -162,7 +159,6 @@ Main Menu
 ├── Stop .............. Stop all animations
 ├── Next / Prev ....... Advance or go back in playlist
 ├── Auto: ON/OFF ...... Toggle duration-based auto-advance
-├── Mirror Rule ....... Choose the naming pattern
 └── Reset ............. Full reset — stop, release all, clear playlist
 ```
 
@@ -171,7 +167,6 @@ Main Menu
 Open `mirror-sync.html` in any browser. Features:
 
 - **Connection** — paste the HTTP-in URL from hovertext
-- **Mirror Rule** — set the naming pattern with live preview
 - **Avatar Scanner** — scan nearby or add manually by name + UUID
 - **Group Management** — two columns (A / B) with move and remove buttons
 - **Animation Library** — master list of all your dances with tags/sets (toggle with the Library button in the toolbar)

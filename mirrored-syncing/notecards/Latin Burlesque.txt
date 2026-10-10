@@ -1,5 +1,5 @@
 # Latin Burlesque — Paragon (8 dances)
-# Duration-aware — auto-advance supported
+# v1.9 format: name:duration (pairs auto-detected from inventory)
 Paragon_Charlene - Latin Burlesque Dance 01:32
 Paragon_Charlene - Latin Burlesque Dance 02:34
 Paragon_Charlene - Latin Burlesque Dance 03:32

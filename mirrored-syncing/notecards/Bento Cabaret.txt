@@ -1,18 +1,18 @@
 # Bento Cabaret (16 dances)
-# Duration-aware — auto-advance supported
-Bento Cabaret 1:32.6
-Bento Cabaret 2:31.3
-Bento Cabaret 3:21.3
-Bento Cabaret 4:27.7
-Bento Cabaret 5:32.3
-Bento Cabaret 6:30.2
-Bento Cabaret 7:31.6
-Bento Cabaret 8:27.9
-Bento Cabaret 9:29.8
-Bento Cabaret 10:30.5
-Bento Cabaret 11:30.6
-Bento Cabaret 12:31.2
-Bento Cabaret 13:31.5
-Bento Cabaret 14:31.3
-Bento Cabaret 15:30.4
-Bento Cabaret 16:30.3
+# v1.9 format: name,pair:duration
+Bento Cabaret 1,Bento Cabaret 1 (mirror):32.6
+Bento Cabaret 2,Bento Cabaret 2 (mirror):31.3
+Bento Cabaret 3,Bento Cabaret 3 (mirror):21.3
+Bento Cabaret 4,Bento Cabaret 4 (mirror):27.7
+Bento Cabaret 5,Bento Cabaret 5 (mirror):32.3
+Bento Cabaret 6,Bento Cabaret 6 (mirror):30.2
+Bento Cabaret 7,Bento Cabaret 7 (mirror):31.6
+Bento Cabaret 8,Bento Cabaret 8 (mirror):27.9
+Bento Cabaret 9,Bento Cabaret 9 (mirror):29.8
+Bento Cabaret 10,Bento Cabaret 10 (mirror):30.5
+Bento Cabaret 11,Bento Cabaret 11 (mirror):30.6
+Bento Cabaret 12,Bento Cabaret 12 (mirror):31.2
+Bento Cabaret 13,Bento Cabaret 13 (mirror):31.5
+Bento Cabaret 14,Bento Cabaret 14 (mirror):31.3
+Bento Cabaret 15,Bento Cabaret 15 (mirror):30.4
+Bento Cabaret 16,Bento Cabaret 16 (mirror):30.3

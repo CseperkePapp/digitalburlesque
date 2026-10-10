@@ -1,18 +1,18 @@
 # Bento Sensual Goddess (16 dances)
-# Duration-aware — auto-advance supported
-Bento_Sensual_Goddess_1:32.4
-Bento_Sensual_Goddess_2:30.1
-Bento_Sensual_Goddess_3:27.3
-Bento_Sensual_Goddess_4:31.2
-Bento_Sensual_Goddess_5:30.3
-Bento_Sensual_Goddess_6:33
-Bento_Sensual_Goddess_7:33.3
-Bento_Sensual_Goddess_8:29.7
-Bento_Sensual_Goddess_9:30.1
-Bento_Sensual_Goddess_10:31.8
-Bento_Sensual_Goddess_11:31.1
-Bento_Sensual_Goddess_12:30.6
-Bento_Sensual_Goddess_13:30.2
-Bento_Sensual_Goddess_14:29.7
-Bento_Sensual_Goddess_15:29
-Bento_Sensual_Goddess_16:28.6
+# v1.9 format: name,pair:duration
+Bento_Sensual_Goddess_1,Bento_Sensual_Goddess_1 (mirror):32.4
+Bento_Sensual_Goddess_2,Bento_Sensual_Goddess_2 (mirror):30.1
+Bento_Sensual_Goddess_3,Bento_Sensual_Goddess_3 (mirror):27.3
+Bento_Sensual_Goddess_4,Bento_Sensual_Goddess_4 (mirror):31.2
+Bento_Sensual_Goddess_5,Bento_Sensual_Goddess_5 (mirror):30.3
+Bento_Sensual_Goddess_6,Bento_Sensual_Goddess_6 (mirror):33
+Bento_Sensual_Goddess_7,Bento_Sensual_Goddess_7 (mirror):33.3
+Bento_Sensual_Goddess_8,Bento_Sensual_Goddess_8 (mirror):29.7
+Bento_Sensual_Goddess_9,Bento_Sensual_Goddess_9 (mirror):30.1
+Bento_Sensual_Goddess_10,Bento_Sensual_Goddess_10 (mirror):31.8
+Bento_Sensual_Goddess_11,Bento_Sensual_Goddess_11 (mirror):31.1
+Bento_Sensual_Goddess_12,Bento_Sensual_Goddess_12 (mirror):30.6
+Bento_Sensual_Goddess_13,Bento_Sensual_Goddess_13 (mirror):30.2
+Bento_Sensual_Goddess_14,Bento_Sensual_Goddess_14 (mirror):29.7
+Bento_Sensual_Goddess_15,Bento_Sensual_Goddess_15 (mirror):29
+Bento_Sensual_Goddess_16,Bento_Sensual_Goddess_16 (mirror):28.6

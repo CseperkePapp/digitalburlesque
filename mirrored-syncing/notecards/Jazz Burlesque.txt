@@ -1,5 +1,5 @@
 # Jazz Burlesque — Abranimations (20 dances)
-# Duration-aware — auto-advance supported
+# v1.9 format: name:duration (pairs auto-detected from inventory)
 
 # Slow
 Jazz Burlesque Slow 1:33.9

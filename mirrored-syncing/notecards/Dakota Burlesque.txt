@@ -1,5 +1,5 @@
 # Dakota Burlesque (14 dances)
-# Duration-aware — auto-advance supported
+# v1.9 format: name:duration (pairs auto-detected from inventory)
 Dakota_BurlesqueDance01_PARAGON:28.05
 Dakota_BurlesqueDance02_PARAGON:28
 Dakota_BurlesqueDance03_PARAGON:29

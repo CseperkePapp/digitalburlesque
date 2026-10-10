@@ -1,14 +1,14 @@
 # Bento Charleston (12 dances)
-# Duration-aware — auto-advance supported
-Bento Charleston 1:30.9
-Bento Charleston 2:29.2
-Bento Charleston 3:33.2
-Bento Charleston 4:33.3
-Bento Charleston 5:33.3
-Bento Charleston 6:32.4
-Bento Charleston 7:31.9
-Bento Charleston 8:32.1
-Bento Charleston 9:32.3
-Bento Charleston 10:32.6
-Bento Charleston 11:34.1
-Bento Charleston 12:31.7
+# v1.9 format: name,pair:duration
+Bento Charleston 1,Bento Charleston 1 (mirror):30.9
+Bento Charleston 2,Bento Charleston 2 (mirror):29.2
+Bento Charleston 3,Bento Charleston 3 (mirror):33.2
+Bento Charleston 4,Bento Charleston 4 (mirror):33.3
+Bento Charleston 5,Bento Charleston 5 (mirror):33.3
+Bento Charleston 6,Bento Charleston 6 (mirror):32.4
+Bento Charleston 7,Bento Charleston 7 (mirror):31.9
+Bento Charleston 8,Bento Charleston 8 (mirror):32.1
+Bento Charleston 9,Bento Charleston 9 (mirror):32.3
+Bento Charleston 10,Bento Charleston 10 (mirror):32.6
+Bento Charleston 11,Bento Charleston 11 (mirror):34.1
+Bento Charleston 12,Bento Charleston 12 (mirror):31.7
